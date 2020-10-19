@@ -63,6 +63,27 @@ class ChannelsConfig():
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
 
+    def _InitDigitalOutputs(self):
+        print('InitDigitalOutputs')
+        print(self.DigColumns)
+        DOChannels = []
+
+        for digc in sorted(self.DigColumns):
+        # for digc in sorted(self.doColumns):
+            print(digc)
+            DOChannels.append(self.doColumns[digc][0])
+            if len(self.doColumns[digc]) > 1:
+                DOChannels.append(self.doColumns[digc][1])
+        print(DOChannels)
+
+#        DOChannels = []
+#
+#        for digc in self.DigColumns:
+#            DOChannels.append(doColumns[digc][0])
+#            DOChannels.append(doColumns[digc][1])
+
+        self.DigitalOutputs = DaqInt.WriteDigital(Channels=DOChannels)
+
     def _InitAnalogOutputs(self, ChVds, ChVs, ChAo2, ChAo3):
         print('ChVds ->', ChVds)
         print('ChVs ->', ChVs)
@@ -73,7 +94,7 @@ class ChannelsConfig():
         if ChAo3:
             self.AO3Out = DaqInt.WriteAnalog((ChAo3,))
 
-    def __init__(self, Channels,
+    def __init__(self, Channels, 
                  AcqDC=True, AcqAC=True,
                  ChVds='ao0', ChVs='ao1',
                  ACGain=1.1e5, DCGain=10e3, Board='MB41'):
@@ -90,6 +111,7 @@ class ChannelsConfig():
 
         self.MyConf = BoardConf.HwConfig[Board]
         self.aiChannels = self.MyConf['aiChannels']
+        # self.doColumns = self.MyConf['ColOuts']
         self.aoChannels = self.MyConf['aoChannels']
         self._InitAnalogOutputs(ChVds=self.aoChannels['ChVds'],
                                 ChVs=self.aoChannels['ChVs'],
@@ -101,8 +123,22 @@ class ChannelsConfig():
         # self.ClearSig = np.zeros((1, len(MyConf['ColOuts'])),
         #                 dtype=np.bool).astype(np.uint8)
         # self.ClearSig = np.hstack((ClearSig, ClearSig))
+        # self.DigColumns = sorted(DigColumns)
+        # self._InitDigitalOutputs()
 
-    def StartAcquisition(self, Vgs, Vds,
+        MuxChannelNames = []
+        for Row in self.ChNamesList:
+        #     for Col in self.DigColumns:
+            MuxChannelNames.append(Row)
+        self.MuxChannelNames = MuxChannelNames
+        # print(self.MuxChannelNames)
+
+        # if self.AcqAC and self.AcqDC:
+        #     self.nChannels = len(self.MuxChannelNames)*2
+        # else:
+        #     self.nChannels = len(self.MuxChannelNames)
+
+    def StartAcquisition(self, Fs, nSampsCo, nBlocks, Vgs, Vds,
                          AnalogOutputs, **kwargs):
         print('StartAcquisition')
         print(AnalogOutputs)
@@ -113,10 +149,14 @@ class ChannelsConfig():
             ChAo2 = None
             ChAo3 = None
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
-
-
-        EveryN = 1000
-        self.AnalogInputs.ReadContData(Fs=100,
+        # self.SetDigitalOutputs(nSampsCo=nSampsCo)
+        print('DSig set')
+        self.nBlocks = nBlocks
+        self.nSampsCo = nSampsCo
+#        self.OutputShape = (nColumns * nRows, nSampsCh, nblocs)
+        self.OutputShape = (len(self.MuxChannelNames), nSampsCo, nBlocks)
+        EveryN = nSampsCo*nBlocks
+        self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=EveryN)
 
     def SetBias(self, Vgs, Vds, ChAo2, ChAo3):
@@ -131,6 +171,47 @@ class ChannelsConfig():
         self.BiasVd = Vds-Vgs
         self.Vgs = Vgs
         self.Vds = Vds
+
+    def SetDigitalOutputs(self, nSampsCo):
+        hwLinesMap = {}
+        for ColName, hwLine in self.doColumns.items():
+            il = int(hwLine[0][4:])
+            hwLinesMap[il] = (ColName, hwLine)
+        
+        # Gen inverted control output, should be the next one of the digital line ('lineX', 'lineX+1')
+        if len(self.doColumns[ColName]) > 1:
+            GenInvert = True
+        else:
+            GenInvert = False
+
+        # Gen sorted indexes for demuxing
+        SortIndDict = {}
+        for ic, coln in enumerate(sorted(self.DigColumns)):
+            SortIndDict[coln] = ic
+        
+        DOut = np.array([], dtype=np.bool)
+        SortDInds = np.zeros((len(self.DigColumns), nSampsCo), dtype=np.int64)
+        SwitchOrder = 0
+        for il, (nLine, (LineName, hwLine)) in enumerate(sorted(hwLinesMap.items())):
+            Lout = np.zeros((1, nSampsCo*len(self.DigColumns)), dtype=np.bool)    
+            if LineName in self.DigColumns:
+                # print(il, nLine, hwLine, LineName)
+                Lout[0, nSampsCo * SwitchOrder: nSampsCo * (SwitchOrder + 1)] = True
+                SortDInds[SortIndDict[LineName], : ] = np.arange(nSampsCo * SwitchOrder,
+                                                             nSampsCo * (SwitchOrder + 1) )
+                SwitchOrder += 1
+            
+            if GenInvert:
+                Cout = np.vstack((Lout, ~Lout))
+            else:
+                Cout = Lout        
+            DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
+
+        SortDIndsL = [inds for inds in SortDInds] 
+        Dout = DOut.astype(np.uint8)
+
+        self.SortDInds = SortDInds
+        self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
 
     def _SortChannels(self, data, SortDict):
         # Sort by aianalog input
@@ -153,7 +234,6 @@ class ChannelsConfig():
         #         for Inds in self.SortDInds:
         #             MuxData[ind, :, indB] = chData[Inds]
         #             ind += 1
-        # return aiData, MuxData
         return aiData
 
     def EveryNEventCallBack(self, Data):
@@ -169,7 +249,15 @@ class ChannelsConfig():
                 aiDataAC = self._SortChannels(Data, self.ACChannelIndex)
                 aiDataAC = aiDataAC / self.ACGain
 
-            _DataEveryNEvent(aiDataDC, aiDataAC)
+            _DataEveryNEvent(aiDataDC, aiDataAC, )
+
+            # if self.AcqAC and self.AcqDC:
+            #     aiData = np.vstack((aiDataDC, aiDataAC))
+            #     _DataEveryNEvent(aiData)
+            # elif self.AcqAC:
+            #     _DataEveryNEvent(aiDataAC)
+            # elif self.AcqDC:
+            #     _DataEveryNEvent(aiDataDC)
 
     def DoneEventCallBack(self, Data):
         print('Done callback')
@@ -178,6 +266,11 @@ class ChannelsConfig():
         print('Stopppp')
         self.SetBias(Vgs=0, Vds=0, ChAo2=0, ChAo3=0)
         self.AnalogInputs.StopContData()
+        if self.DigitalOutputs is not None:
+            print('Clear Digital')
+#            self.DigitalOutputs.SetContSignal(Signal=self.ClearSig)
+            self.DigitalOutputs.ClearTask()
+            self.DigitalOutputs = None
 
 
 #    def __del__(self):
