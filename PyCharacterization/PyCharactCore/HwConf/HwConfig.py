@@ -5,6 +5,31 @@ Created on Tue Sep  8 11:14:17 2020
 @author: javi8
 """
 
+MainBoard = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
+                            'Ch02': ('ai1', 'ai9'),
+                            'Ch03': ('ai2', 'ai10'),
+                            'Ch04': ('ai3', 'ai11'),
+                            'Ch05': ('ai4', 'ai12'),
+                            'Ch06': ('ai5', 'ai13'),
+                            'Ch07': ('ai6', 'ai14'),
+                            'Ch08': ('ai7', 'ai15'),
+                            'Ch09': ('ai16', 'ai24'),
+                            'Ch10': ('ai17', 'ai25'),
+                            'Ch11': ('ai18', 'ai26'),
+                            'Ch12': ('ai19', 'ai27'),
+                            'Ch13': ('ai20', 'ai28'),
+                            'Ch14': ('ai21', 'ai29'),
+                            'Ch15': ('ai22', 'ai30'),
+                            'Ch16': ('ai23', 'ai31')},
+
+             'aoChannels': {'ChVs': 'ao1',
+                            'ChVds': 'ao0',
+                            'ChAo2': None,
+                            'ChAo3': None, },
+
+             'ColOuts': None, 
+             }
+
 MainBoard_16x16 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                                   'Ch02': ('ai1', 'ai9'),
                                   'Ch03': ('ai2', 'ai10'),
@@ -200,7 +225,8 @@ MB42 = {'aiChannels': {'Ch09': ('ai0', 'ai8'),
                      }, }
 
 
-HwConfig = {'MainBoard_16x16': MainBoard_16x16,
+HwConfig = {'MainBoard': MainBoard,
+            'MainBoard_16x16': MainBoard_16x16,
             'MainBoard_8x8': MainBoard_8x8,
             'Mos2': Mos2,
             'MB41': MB41,

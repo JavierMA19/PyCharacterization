@@ -1,86 +1,69 @@
-
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 19 10:26:32 2020
+Created on Mon Oct 19 10:32:07 2020
 
 @author: Javier
 """
-#
+
 
 from __future__ import print_function
 from PyQt5 import Qt
-from qtpy.QtWidgets import (QHeaderView, QCheckBox, QSpinBox, QLineEdit,
-                            QDoubleSpinBox, QTextEdit, QComboBox,
-                            QTableWidget, QAction, QMessageBox, QFileDialog,
-                            QInputDialog)
+# from qtpy.QtWidgets import (QHeaderView, QCheckBox, QSpinBox, QLineEdit,
+#                             QDoubleSpinBox, QTextEdit, QComboBox,
+#                             QTableWidget, QAction, QMessageBox, QFileDialog,
+#                             QInputDialog)
 
-from qtpy import QtWidgets, uic
+from qtpy import QtWidgets
 import numpy as np
 import time
-import os
+# import os
 import sys
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
-import PyqtTools.FileModule as FileMod
-import PyqtTools.PlotModule as PltMod
-import PyqtTools.CharacterizationModule as Charact
 
-from PyqtTools.PlotModule import Plotter as TimePlt
-from PyqtTools.PlotModule import PlotterParameters as TimePltPars
-from PyqtTools.PlotModule import PSDPlotter as PSDPlt
 from PyqtTools.PlotModule import PSDParameters as PSDPltPars
+from PyqtTools.PlotModule import PlotterParameters as TimePltPars
 
-
-
-import PyCharAcqCore.PyCharAcqThread as AcqMod
+import PyqtTools.FileModule as FileMod
+import PyqtTools.CharacterizationModule as Charact
+import PyCharactCore.PyCharThread as AcqMod
 
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
 
+    threadAcq = None
+    threadSave = None
+    threadCharact = None
+
     def __init__(self):
         super(MainWindow, self).__init__()
-
-        self.threadAcq = None
-        self.threadSave = None
-        self.threadPlotter = None
-        self.threadPSDPlotter = None
-        self.threadPlotterRaw = None
-        self.threadCharact = None
-        self.RefreshGrapg = None
 
         layout = Qt.QVBoxLayout(self)
 
         self.btnAcq = Qt.QPushButton("Start Acq!")
         layout.addWidget(self.btnAcq)
 
-        self.ResetGraph = Qt.QPushButton("Reset Graphics")
-        layout.addWidget(self.ResetGraph)
-
+        # Thread Module
         self.SamplingPar = AcqMod.SampSetParam(name='SampSettingConf')
         self.Parameters = Parameter.create(name='App Parameters',
                                            type='group',
                                            children=(self.SamplingPar,))
 
         self.SamplingPar.NewConf.connect(self.on_NewConf)
-        self.SamplingPar.Fs.sigValueChanged.connect(self.on_FsChanged)
-        self.SamplingPar.FsxCh.sigValueChanged.connect(self.on_FsxChChanged)
 
+        # self.SamplingPar.Fs.sigValueChanged.connect(self.on_FsChanged)
+        # self.SamplingPar.FsxCh.sigValueChanged.connect(self.on_FsxChChanged)
+
+        # Charact Module
         self.SwParams = Charact.SweepsConfig(QTparent=self, name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
 
-        self.PlotParams = TimePltPars(name='TimePlt',
-                              title='Time Plot Options')
-
-        self.PlotParams.NewConf.connect(self.on_NewPlotConf)
-        # self.Parameters.addChild(self.PlotParams)
-
-        self.RawPlotParams = TimePltPars(name='RawPlot')
-        # self.Parameters.addChild(self.RawPlotParams)
-
         self.PsdPlotParams = PSDPltPars(name='PSDPlt',
                                         title='PSD Plot Options')
-        # self.Parameters.addChild(self.PsdPlotParams)
+        
+        self.PlotParams = TimePltPars(name='TimePlt',
+                              title='Time Plot Options')
 
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -92,51 +75,12 @@ class MainWindow(Qt.QWidget):
         self.setWindowTitle('MainWindow')
 
         self.btnAcq.clicked.connect(self.on_btnStart)
-        self.ResetGraph.clicked.connect(self.on_ResetGraph)
-
-        self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
-                                                          name='Record File')
-        # self.Parameters.addChild(self.FileParameters)
 
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
                                                            name='Configuration File')
         self.Parameters.addChild(self.ConfigParameters)
-        self.on_FsChanged()
-        self.on_FsxChChanged()
+
         self.on_NewConf()
-
-    def on_FsChanged(self):
-        self.RawPlotParams.param('Fs').setValue(self.SamplingPar.Fs.value())
-
-    def on_FsxChChanged(self):
-        print('FSXCH', self.SamplingPar.FsxCh.value())
-        self.PlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
-        self.PsdPlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
-
-    def on_pars_changed(self, param, changes):
-        print("tree changes:")
-        for param, change, data in changes:
-            path = self.Parameters.childPath(param)
-            if path is not None:
-                childName = '.'.join(path)
-            else:
-                childName = param.name()
-        print('  parameter: %s' % childName)
-        print('  change:    %s' % change)
-        print('  data:      %s' % str(data))
-        print('  ----------')
-
-        if childName == 'SampSettingConf.Sampling Settings.Vgs':
-            if self.threadAcq:
-                Vds = self.threadAcq.DaqInterface.Vds
-                self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds,
-                                                    ChAo2=None, ChAo3=None)
-
-        if childName == 'SampSettingConf.Sampling Settings.Vds':
-            if self.threadAcq:
-                Vgs = self.threadAcq.DaqInterface.Vgs
-                self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data,
-                                                    ChAo2=None, ChAo3=None)
 
     def on_NewPSDConf(self):
         if self.threadPSDPlotter is not None:
@@ -146,8 +90,8 @@ class MainWindow(Qt.QWidget):
 
     def on_NewConf(self):
         # self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
-        self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames()[1])
-        self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
+        self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
+        # self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
         self.PsdPlotParams.ChannelConf = self.PlotParams.ChannelConf
         nChannels = self.PlotParams.param('nChannels').value()
         self.PsdPlotParams.param('nChannels').setValue(nChannels)
@@ -159,49 +103,18 @@ class MainWindow(Qt.QWidget):
             RefreshTime = self.PlotParams.param('RefreshTime').value()
             self.threadPlotter.SetRefreshTime(RefreshTime)        
 
-    def on_ResetGraph(self):
-        if self.threadAcq is None:
-            return
-
-        # Plot and PSD threads are stopped
-        if self.threadPlotter is not None:
-            self.threadPlotter.stop()
-            self.threadPlotter = None
-
-        if self.threadPSDPlotter is not None:
-            self.threadPSDPlotter.stop()
-            self.threadPSDPlotter = None
-
-        if self.threadPlotterRaw is not None:
-            self.threadPlotterRaw.stop()
-            self.threadPlotterRaw = None
-
-        if self.PlotParams.param('PlotEnable').value():
-            Pltkw = self.PlotParams.GetParams()
-            self.threadPlotter = TimePlt(**Pltkw)
-            self.threadPlotter.start()
-
-        if self.PsdPlotParams.param('PlotEnable').value():
-            PSDKwargs = self.PsdPlotParams.GetParams()
-            self.threadPSDPlotter = PSDPlt(**PSDKwargs)
-            self.threadPSDPlotter.start()
-
-        if self.RawPlotParams.param('PlotEnable').value():
-            RwPltkw = self.RawPlotParams.GetParams()
-            self.threadPlotterRaw = TimePlt(**RwPltkw)
-            self.threadPlotterRaw.start()
-
     def on_btnStart(self):
         if self.threadAcq is None:
             GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
-            AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
-            ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
+            # AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
+            ChannelsNames = self.SamplingPar.GetChannelsNames()
             print(ChannelsNames, '-->ChannelsNames')
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+
 
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=len(ChannelsNames),
@@ -219,7 +132,6 @@ class MainWindow(Qt.QWidget):
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=GenKwargs,
-                                                          AvgIndex=AvgIndex,
                                                           )
 
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
