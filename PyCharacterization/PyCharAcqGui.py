@@ -113,30 +113,30 @@ class MainWindow(Qt.QWidget):
         self.PlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
         self.PsdPlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
 
-    def on_pars_changed(self, param, changes):
-        print("tree changes:")
-        for param, change, data in changes:
-            path = self.Parameters.childPath(param)
-            if path is not None:
-                childName = '.'.join(path)
-            else:
-                childName = param.name()
-        print('  parameter: %s' % childName)
-        print('  change:    %s' % change)
-        print('  data:      %s' % str(data))
-        print('  ----------')
+    # def on_pars_changed(self, param, changes):
+    #     print("tree changes:")
+    #     for param, change, data in changes:
+    #         path = self.Parameters.childPath(param)
+    #         if path is not None:
+    #             childName = '.'.join(path)
+    #         else:
+    #             childName = param.name()
+    #     print('  parameter: %s' % childName)
+    #     print('  change:    %s' % change)
+    #     print('  data:      %s' % str(data))
+    #     print('  ----------')
 
-        if childName == 'SampSettingConf.Sampling Settings.Vgs':
-            if self.threadAcq:
-                Vds = self.threadAcq.DaqInterface.Vds
-                self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds,
-                                                    ChAo2=None, ChAo3=None)
+    #     if childName == 'SampSettingConf.Sampling Settings.Vgs':
+    #         if self.threadAcq:
+    #             Vds = self.threadAcq.DaqInterface.Vds
+    #             self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds,
+    #                                                 ChAo2=None, ChAo3=None)
 
-        if childName == 'SampSettingConf.Sampling Settings.Vds':
-            if self.threadAcq:
-                Vgs = self.threadAcq.DaqInterface.Vgs
-                self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data,
-                                                    ChAo2=None, ChAo3=None)
+    #     if childName == 'SampSettingConf.Sampling Settings.Vds':
+    #         if self.threadAcq:
+    #             Vgs = self.threadAcq.DaqInterface.Vgs
+    #             self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data,
+    #                                                 ChAo2=None, ChAo3=None)
 
     def on_NewPSDConf(self):
         if self.threadPSDPlotter is not None:
@@ -198,8 +198,8 @@ class MainWindow(Qt.QWidget):
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
             ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
             print(ChannelsNames, '-->ChannelsNames')
-
-            PlotterKwargs = self.PlotParams.GetParams()
+            self.AC = GenChanKwargs['AcqAC']
+            # PlotterKwargs = self.PlotParams.GetParams()
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
@@ -209,8 +209,8 @@ class MainWindow(Qt.QWidget):
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
                                                       ChnName=ChannelsNames,
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
-                                                       **self.SweepsKwargs
-                                                      )
+                                                       **self.SweepsKwargs)
+
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
@@ -225,7 +225,6 @@ class MainWindow(Qt.QWidget):
                                                           )
 
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
-
             self.threadCharact.start()
             self.threadAcq.start()
 
@@ -283,11 +282,10 @@ class MainWindow(Qt.QWidget):
         #     self.threadSave.AddData(self.threadAcq.OutData.transpose()) # Change for aiData?? TODO
 
         if self.threadCharact is not None: #Flag estable and ACenable
-            if self.threadCharact.Stable and self.threadCharact.ACenable:
-                self.threadCharact.AddData(self.threadAcq.aiData)
+            if self.threadCharact.Stable and self.AC:
+                self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
             else:
-                print(self.threadAcq.aiData.shape, 'on_newSample--.Shape')
-                self.threadCharact.AddData(self.threadAcq.aiData)
+                self.threadCharact.AddData(self.threadAcq.aiData.transpose())
 
         # if self.threadPlotter is not None:
         #     self.threadPlotter.AddData(self.threadAcq.OutDataDC.transpose())

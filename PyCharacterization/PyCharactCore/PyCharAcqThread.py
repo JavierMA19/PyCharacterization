@@ -48,10 +48,10 @@ SampSettingConf = ({'title': 'Channels Config',
                                   'type': 'group',
                                   'children': (), },
 
-                                 # {'tittle': 'Columns Channels',
-                                 #  'name': 'DigColumns',
-                                 #  'type': 'group',
-                                 #  'children': (), }
+                                 {'tittle': 'Columns Channels',
+                                  'name': 'DigColumns',
+                                  'type': 'group',
+                                  'children': (), }
 
                                  ), },
 
@@ -136,6 +136,7 @@ class SampSetParam(pTypes.GroupParameter):
     Acq = {}
     HwSettings = {}
 
+
     def __init__(self, **kwargs):
         super(SampSetParam, self).__init__(**kwargs)
         self.addChildren(SampSettingConf)
@@ -150,12 +151,12 @@ class SampSetParam(pTypes.GroupParameter):
         self.ChsConfig = self.param('ChsConfig')
         self.Config = self.ChsConfig.param('Board')
         self.RowChannels = self.ChsConfig.param('Channels')
-        # self.ColChannels = self.ChsConfig.param('DigColumns')
+        self.ColChannels = self.ChsConfig.param('DigColumns')
 
         # Init Settings
         self.on_Acq_Changed()
         self.on_Row_Changed()
-        # self.on_Col_Changed()
+        self.on_Col_Changed()
         self.on_Fs_Changed()
         self.on_Ao_Changed()
 
@@ -163,7 +164,7 @@ class SampSetParam(pTypes.GroupParameter):
         # Signals
         self.Config.sigTreeStateChanged.connect(self.Hardware_Selection)
         self.RowChannels.sigTreeStateChanged.connect(self.on_Row_Changed)
-        # self.ColChannels.sigTreeStateChanged.connect(self.on_Col_Changed)
+        self.ColChannels.sigTreeStateChanged.connect(self.on_Col_Changed)
         self.AnalogOutputs.sigTreeStateChanged.connect(self.on_Ao_Changed)
         self.ChsConfig.param('AcqAC').sigValueChanged.connect(self.on_Acq_Changed)
         self.ChsConfig.param('AcqDC').sigValueChanged.connect(self.on_Acq_Changed)
@@ -177,7 +178,7 @@ class SampSetParam(pTypes.GroupParameter):
             if k == self.Config.value():
                 self.HwSettings = BoardConf.HwConfig[k]
         self.GetChannelsChildren()
-        # self.GetColsChildren()
+        self.GetColsChildren()
         self.GetAnalogOutputs()
         self.on_Fs_Changed()
 
@@ -193,12 +194,15 @@ class SampSetParam(pTypes.GroupParameter):
 
     def GetColsChildren(self):
         print('GetColsChildren')
+        print(self.ColChannels)
         if self.HwSettings:
             self.ColChannels.clearChildren()
-            for i in sorted(self.HwSettings['ColOuts']):
-                cc = copy.deepcopy(ChannelParam)
-                cc['name'] = i
-                self.ColChannels.addChild(cc)
+
+            if self.HwSettings['ColOuts']:
+                for i in sorted(self.HwSettings['ColOuts']):
+                    cc = copy.deepcopy(ChannelParam)
+                    cc['name'] = i
+                    self.ColChannels.addChild(cc)
 
     def GetAnalogOutputs(self):
         print('GetAnalogOutputs')
@@ -267,18 +271,19 @@ class SampSetParam(pTypes.GroupParameter):
         Ind = 0
         ChannelNames = {}
         ChannelsDCNames = {}
-        ChannelsACNames = {}
 
         if self.ChsConfig.param('AcqDC').value():
             for Row in self.Rows:
-                ChannelNames[Row + 'DC'] = Ind
                 ChannelsDCNames[Row] = Ind                   
-                Ind += 1
+                for Col in self.Columns:
+                    ChannelNames[Row + Col + 'DC'] = Ind
+                    Ind += 1
 
         if self.ChsConfig.param('AcqAC').value():
             for Row in self.Rows:
-                ChannelNames[Row + 'AC'] = Ind
-                Ind += 1
+                for Col in self.Columns:
+                    ChannelNames[Row + Col + 'AC'] = Ind
+                    Ind += 1
 
         return ChannelNames, ChannelsDCNames
 
@@ -299,8 +304,8 @@ class SampSetParam(pTypes.GroupParameter):
         for p in self.ChsConfig.children():
             if p.name() == 'Channels':
                 ChanKwargs[p.name()] = self.Rows
-            # elif p.name() == 'DigColumns':
-            #     ChanKwargs[p.name()] = self.Columns
+            elif p.name() == 'DigColumns':
+                ChanKwargs[p.name()] = self.Columns
             else:
                 ChanKwargs[p.name()] = p.value()
 
@@ -332,7 +337,8 @@ class DataAcquisitionThread(Qt.QThread):
     def NewData(self, aiDataDC, aiDataAC):
         if aiDataAC is not None:
             print('AC--DC')       
-            self.aiData = np.vstack((aiDataDC, aiDataAC))
+            self.aiData = aiDataDC
+            self.aiDataAC = aiDataAC
         else:
             print('DC')
             self.aiData = aiDataDC
