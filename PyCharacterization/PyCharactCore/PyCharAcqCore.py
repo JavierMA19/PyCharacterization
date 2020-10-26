@@ -33,8 +33,6 @@ class ChannelsConfig():
     DataEveryNEvent = None
     DataDoneEvent = None
 
-
-
     def _InitAnalogInputs(self):
         print('InitAnalogInputs')
         self.DCChannelIndex = {}
@@ -68,19 +66,13 @@ class ChannelsConfig():
         print(self.DigColumns)
         DOChannels = []
 
-        for digc in sorted(self.DigColumns):
-        # for digc in sorted(self.doColumns):
-            print(digc)
-            DOChannels.append(self.doColumns[digc][0])
-            if len(self.doColumns[digc]) > 1:
-                DOChannels.append(self.doColumns[digc][1])
+        # for digc in sorted(self.DigColumns):
+        for k, v in self.doColumns.items():
+            DOChannels.append(v[0])
+            if len(v) > 1:
+                DOChannels.append(v[1])
+                
         print(DOChannels)
-
-#        DOChannels = []
-#
-#        for digc in self.DigColumns:
-#            DOChannels.append(doColumns[digc][0])
-#            DOChannels.append(doColumns[digc][1])
 
         self.DigitalOutputs = DaqInt.WriteDigital(Channels=DOChannels)
 
@@ -94,7 +86,7 @@ class ChannelsConfig():
         if ChAo3:
             self.AO3Out = DaqInt.WriteAnalog((ChAo3,))
 
-    def __init__(self, Channels, 
+    def __init__(self, Channels, DigColumns,
                  AcqDC=True, AcqAC=True,
                  ChVds='ao0', ChVs='ao1',
                  ACGain=1.1e5, DCGain=10e3, Board='MB41'):
@@ -111,7 +103,7 @@ class ChannelsConfig():
 
         self.MyConf = BoardConf.HwConfig[Board]
         self.aiChannels = self.MyConf['aiChannels']
-        # self.doColumns = self.MyConf['ColOuts']
+        self.doColumns = self.MyConf['ColOuts']
         self.aoChannels = self.MyConf['aoChannels']
         self._InitAnalogOutputs(ChVds=self.aoChannels['ChVds'],
                                 ChVs=self.aoChannels['ChVs'],
@@ -123,21 +115,17 @@ class ChannelsConfig():
         # self.ClearSig = np.zeros((1, len(MyConf['ColOuts'])),
         #                 dtype=np.bool).astype(np.uint8)
         # self.ClearSig = np.hstack((ClearSig, ClearSig))
-        # self.DigColumns = sorted(DigColumns)
-        # self._InitDigitalOutputs()
+        self.DigColumns = sorted(DigColumns)
+        if self.doColumns:
+            self._InitDigitalOutputs()
 
-        MuxChannelNames = []
-        for Row in self.ChNamesList:
-        #     for Col in self.DigColumns:
-            MuxChannelNames.append(Row)
-        self.MuxChannelNames = MuxChannelNames
-        # print(self.MuxChannelNames)
-
-        # if self.AcqAC and self.AcqDC:
-        #     self.nChannels = len(self.MuxChannelNames)*2
-        # else:
-        #     self.nChannels = len(self.MuxChannelNames)
-
+            MuxChannelNames = []
+            for Row in self.ChNamesList:
+                for Col in self.DigColumns:
+                    MuxChannelNames.append(Row + Col)
+            self.MuxChannelNames = MuxChannelNames
+            print(self.MuxChannelNames)
+    
     def StartAcquisition(self, Fs, nSampsCo, nBlocks, Vgs, Vds,
                          AnalogOutputs, **kwargs):
         print('StartAcquisition')
@@ -149,7 +137,8 @@ class ChannelsConfig():
             ChAo2 = None
             ChAo3 = None
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
-        # self.SetDigitalOutputs(nSampsCo=nSampsCo)
+        if self.doColumns:
+            self.DO = self.SetDigitalOutputs(nSampsCo=nSampsCo)
         print('DSig set')
         self.nBlocks = nBlocks
         self.nSampsCo = nSampsCo
@@ -184,6 +173,7 @@ class ChannelsConfig():
         else:
             GenInvert = False
 
+        nSampsCo = 1
         # Gen sorted indexes for demuxing
         SortIndDict = {}
         for ic, coln in enumerate(sorted(self.DigColumns)):
@@ -211,7 +201,8 @@ class ChannelsConfig():
         Dout = DOut.astype(np.uint8)
 
         self.SortDInds = SortDInds
-        self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
+        return Dout
+        # self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
 
     def _SortChannels(self, data, SortDict):
         # Sort by aianalog input
@@ -224,16 +215,17 @@ class ChannelsConfig():
         aiData = aiData.transpose()
         # MuxData = np.ndarray(self.OutputShape)
 
-        # nColumns = len(self.DigColumns)
-        # for indB in range(self.nBlocks):
-        #     startind = indB * self.nSampsCo * nColumns
-        #     stopind = self.nSampsCo * nColumns * (indB + 1)
-        #     Vblock = aiData[:, startind: stopind]
-        #     ind = 0
-        #     for chData in Vblock[:, :]:
-        #         for Inds in self.SortDInds:
-        #             MuxData[ind, :, indB] = chData[Inds]
-        #             ind += 1
+        # if self.doColumns:
+        #     nColumns = len(self.DigColumns)
+        #     for indB in range(self.nBlocks):
+        #         startind = indB * self.nSampsCo * nColumns
+        #         stopind = self.nSampsCo * nColumns * (indB + 1)
+        #         Vblock = aiData[:, startind: stopind]
+        #         ind = 0
+        #         for chData in Vblock[:, :]:
+        #             for Inds in self.SortDInds:
+        #                 MuxData[ind, :, indB] = chData[Inds]
+        #                 ind += 1
         return aiData
 
     def EveryNEventCallBack(self, Data):

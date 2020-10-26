@@ -67,13 +67,13 @@ SampSettingConf = ({'title': 'Channels Config',
                                  {'title': 'Column Samples',
                                   'name': 'nSampsCo',
                                   'type': 'int',
-                                  'value': 20,
+                                  'value': 200,
                                   'step': 1,
                                   'limits': (1, 10000)},
                                  {'title': 'Acquired Blocks',
                                   'name': 'nBlocks',
                                   'type': 'int',
-                                  'value': 100,
+                                  'value': 200,
                                   'step': 10,
                                   'limits': (10, 10000)},
                                  {'title': 'Averaging',
@@ -276,14 +276,14 @@ class SampSetParam(pTypes.GroupParameter):
             for Row in self.Rows:
                 ChannelsDCNames[Row] = Ind                   
                 for Col in self.Columns:
-                    ChannelNames[Row + Col + 'DC'] = Ind
+                    ChannelNames[Row + Col] = Ind
                     Ind += 1
 
-        if self.ChsConfig.param('AcqAC').value():
-            for Row in self.Rows:
-                for Col in self.Columns:
-                    ChannelNames[Row + Col + 'AC'] = Ind
-                    Ind += 1
+        # if self.ChsConfig.param('AcqAC').value():
+        #     for Row in self.Rows:
+        #         for Col in self.Columns:
+        #             ChannelNames[Row + Col + 'AC'] = Ind
+        #             Ind += 1
 
         return ChannelNames, ChannelsDCNames
 

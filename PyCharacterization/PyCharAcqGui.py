@@ -23,7 +23,7 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 
 import PyqtTools.FileModule as FileMod
 import PyqtTools.PlotModule as PltMod
-import PyqtTools.CharacterizationModule as Charact
+import PyqtTools.Mux_CharacterizationModule as Charact
 
 from PyqtTools.PlotModule import Plotter as TimePlt
 from PyqtTools.PlotModule import PlotterParameters as TimePltPars
@@ -196,7 +196,7 @@ class MainWindow(Qt.QWidget):
             GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
-            ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
+            ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
             print(ChannelsNames, '-->ChannelsNames')
             self.AC = GenChanKwargs['AcqAC']
             # PlotterKwargs = self.PlotParams.GetParams()
@@ -205,14 +205,26 @@ class MainWindow(Qt.QWidget):
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
 
+            # Acquisition part
+            self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
+                                                          SampKw=GenKwargs,
+                                                          AvgIndex=AvgIndex,
+                                                          )
+
+            self.threadAcq.NewMuxData.connect(self.on_NewSample)
+            DigColumns = self.threadAcq.DaqInterface.DigColumns
+            print('DIGITALCOLUMNS', DigColumns)
+
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
                                                       ChnName=ChannelsNames,
+                                                      DigColumns=DigColumns,
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                        **self.SweepsKwargs)
 
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
+            self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
             
             GenKwargs['Vgs'] = self.threadCharact.NextVgs
@@ -313,7 +325,12 @@ class MainWindow(Qt.QWidget):
                                             ChAo2=None,
                                             ChAo3=None)
 
-        
+    def on_NextDigital(self):
+        print('on_NextDigital')
+        NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.NextColumn]
+        print(NewDigitalSignal, '--NewDigitalSignal--')
+        self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
+
     def on_CharactEnd(self):
         print('END Charact')
         self.threadCharact.NextVg.disconnect()
