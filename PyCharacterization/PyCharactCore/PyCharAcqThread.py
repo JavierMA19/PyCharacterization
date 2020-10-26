@@ -245,11 +245,26 @@ class SampSetParam(pTypes.GroupParameter):
         self.on_Fs_Changed()
         self.NewConf.emit()
 
+    # def on_Ao_Changed(self):
+    #     self.Ao = {}
+    #     for p in self.AnalogOutputs.children():
+    #         self.Ao[p.name()] = p.value()
+    #     self.NewConf.emit()
+
     def on_Ao_Changed(self):
         self.Ao = {}
         for p in self.AnalogOutputs.children():
+            print(p.name(), 'namep')
             self.Ao[p.name()] = p.value()
+
         self.NewConf.emit()
+        if 'ChAo2' in self.Ao:
+            self.Ao2 = self.AnalogOutputs.param('ChAo2')
+        else: self.Ao2 = None
+        if 'ChAo3' in self.Ao:       
+            self.Ao3 = self.AnalogOutputs.param('ChAo3')
+        else:
+            self.Ao3 = None
 
     def GetRowNames(self):
         Ind = 0

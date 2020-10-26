@@ -193,12 +193,11 @@ class MainWindow(Qt.QWidget):
 
     def on_btnStart(self):
         if self.threadAcq is None:
-            GenKwargs = self.SamplingPar.GetSampKwargs()
+            self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
             ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
-            print(ChannelsNames, '-->ChannelsNames')
-            self.AC = GenChanKwargs['AcqAC']
+                
             # PlotterKwargs = self.PlotParams.GetParams()
 
             # Characterization part
@@ -207,13 +206,12 @@ class MainWindow(Qt.QWidget):
 
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
-                                                          SampKw=GenKwargs,
+                                                          SampKw=self.GenKwargs,
                                                           AvgIndex=AvgIndex,
                                                           )
 
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
             DigColumns = self.threadAcq.DaqInterface.DigColumns
-            print('DIGITALCOLUMNS', DigColumns)
 
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
@@ -226,17 +224,18 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            
-            GenKwargs['Vgs'] = self.threadCharact.NextVgs
-            GenKwargs['Vds'] = self.threadCharact.NextVds
+            # self.threadCharact.ACenable
+
+            self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
+            self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
             # Acquisition part
-            self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
-                                                          SampKw=GenKwargs,
-                                                          AvgIndex=AvgIndex,
-                                                          )
+            # self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
+            #                                               SampKw=GenKwargs,
+            #                                               AvgIndex=AvgIndex,
+            #                                               )
 
-            self.threadAcq.NewMuxData.connect(self.on_NewSample)
+            # self.threadAcq.NewMuxData.connect(self.on_NewSample)
             self.threadCharact.start()
             self.threadAcq.start()
 
@@ -309,27 +308,46 @@ class MainWindow(Qt.QWidget):
         #     self.threadPlotterRaw.AddData(self.threadAcq.aiData.transpose())
         print('sample time', Ts, np.mean(self.Tss))
 
-           
-# #############################Restart Timer Stabilization####################
     def on_NextVg(self):
+        if self.SamplingPar.Ao2:
+            Ao2 = self.SamplingPar.Ao2.value()
+            Ao3 = self.SamplingPar.Ao3.value()
+        else: 
+            Ao2 = None
+            Ao3 = None
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
-                                            ChAo2=None,
-                                            ChAo3=None)
+                                            ChAo2=Ao2,
+                                            ChAo3=Ao3)
         print('NEXT VGS SWEEP')
 
-# #############################Nex Vd Value##############################
     def on_NextVd(self):        
+        if self.SamplingPar.Ao2:
+            Ao2 = self.SamplingPar.Ao2.value()
+            Ao3 = self.SamplingPar.Ao3.value()
+        else: 
+            Ao2 = None
+            Ao3 = None
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
-                                            ChAo2=None,
-                                            ChAo3=None)
+                                            ChAo2=Ao2,
+                                            ChAo3=Ao3)
 
     def on_NextDigital(self):
         print('on_NextDigital')
         NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.NextColumn]
         print(NewDigitalSignal, '--NewDigitalSignal--')
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
+        if self.SamplingPar.Ao2:
+            Ao2 = self.SamplingPar.Ao2.value()
+            Ao3 = self.SamplingPar.Ao3.value()
+        else: 
+            Ao2 = None
+            Ao3 = None
+        self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
+                                            Vds=self.threadCharact.NextVds,
+                                            ChAo2=Ao2,
+                                            ChAo3=Ao3)
 
     def on_CharactEnd(self):
         print('END Charact')

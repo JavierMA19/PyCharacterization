@@ -143,7 +143,7 @@ class ChannelsConfig():
         self.nBlocks = nBlocks
         self.nSampsCo = nSampsCo
 #        self.OutputShape = (nColumns * nRows, nSampsCh, nblocs)
-        self.OutputShape = (len(self.MuxChannelNames), nSampsCo, nBlocks)
+        # self.OutputShape = (len(self.MuxChannelNames), nSampsCo, nBlocks)
         EveryN = nSampsCo*nBlocks
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=EveryN)
