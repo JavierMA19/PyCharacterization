@@ -27,7 +27,8 @@ MainBoard = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                             'ChAo2': None,
                             'ChAo3': None, },
 
-             'ColOuts': None, 
+             'ColOuts': None,
+             'DOSwitch': None,
              }
 
 MainBoard_16x16 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
@@ -68,7 +69,9 @@ MainBoard_16x16 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                                'Col09': ('line26', 'line27'),
                                'Col12': ('line28', 'line29'),
                                'Col10': ('line30', 'line31'),
-                               }, }
+                               },
+                   'DOSwitch': None,
+                   }
 
 MainBoard_8x8 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                                 'Ch02': ('ai1', 'ai9'),
@@ -100,7 +103,9 @@ MainBoard_8x8 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                              'Col6': ('line10', 'line11'),
                              'Col7': ('line12', 'line13'),
                              'Col8': ('line14', 'line15'),
-                             }, }
+                             },
+                 'DOSwitch': None,
+                 }
 
 Mos2 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                        'Ch02': ('ai1', 'ai9'),
@@ -140,7 +145,9 @@ Mos2 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                     'Col16': ('line13', ),
                     'Col15': ('line14', ),
                     'Col14': ('line15', ),
-                    }, }
+                    },
+        'DOSwitch': None,
+        }
 
 MB41 = {'aiChannels': {'Ch09': ('ai0', 'ai8'),
                        'Ch10': ('ai1', 'ai9'),
@@ -181,7 +188,9 @@ MB41 = {'aiChannels': {'Ch09': ('ai0', 'ai8'),
                     'Col08': ('line26', 'line27'),
                     'Col05': ('line28', 'line29'),
                     'Col06': ('line30', 'line31'),
-                    }, }
+                    },
+        'DOSwitch': None,
+        }
 
 MB42 = {'aiChannels': {'Ch09': ('ai0', 'ai8'),
                        'Ch10': ('ai1', 'ai9'),
@@ -222,7 +231,53 @@ MB42 = {'aiChannels': {'Ch09': ('ai0', 'ai8'),
                      'Col08': ('line13', ),
                      'Col05': ('line14', ),
                      'Col06': ('line15', ),        
-                     }, }
+                     },
+
+                'DOSwitch': None,
+        }
+
+MainBoard_v3 = {'aiChannels': {'Ch01': 'ai8',
+                               'Ch11': 'ai12',
+                               'Ch03': 'ai9',
+                               'Ch09': 'ai15',
+                               'Ch05': 'ai10',
+                               'Ch15': 'ai14',
+                               'Ch07': 'ai11',
+                               'Ch13': 'ai13',
+                               'Ch02': 'ai0',
+                               'Ch12': 'ai4',
+                               'Ch04': 'ai1',
+                               'Ch10': 'ai7',
+                               'Ch06': 'ai2',
+                               'Ch16': 'ai6',
+                               'Ch08': 'ai3',
+                               'Ch14': 'ai5',
+                               'Ch27': 'ai27',
+                               'Ch17': 'ai29',
+                               'Ch25': 'ai26',
+                               'Ch19': 'ai30',
+                               'Ch31': 'ai25',
+                               'Ch21': 'ai31',
+                               'Ch29': 'ai24',
+                               'Ch23': 'ai28',
+                               'Ch28': 'ai19',
+                               'Ch18': 'ai21',
+                               'Ch26': 'ai18',
+                               'Ch20': 'ai22',
+                               'Ch32': 'ai17',
+                               'Ch22': 'ai23',
+                               'Ch30': 'ai16',
+                               'Ch24': 'ai20'},
+
+        'aoChannels': {'ChVs': 'ao1',
+                       'ChVds': 'ao0',
+                       'ChAo2': None,
+                       'ChAo3': None, },
+
+        'ColOuts': None, 
+        'DOSwitch': ['port0/line0:9', ],
+                     }
+
 
 
 HwConfig = {'MainBoard': MainBoard,
@@ -230,4 +285,5 @@ HwConfig = {'MainBoard': MainBoard,
             'MainBoard_8x8': MainBoard_8x8,
             'Mos2': Mos2,
             'MB41': MB41,
-            'MB42': MB42}
+            'MB42': MB42,
+            'MainBoard_v3': MainBoard_v3}

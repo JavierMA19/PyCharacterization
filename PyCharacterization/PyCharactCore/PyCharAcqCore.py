@@ -28,6 +28,7 @@ class ChannelsConfig():
     MyConf = None
     AO2Out = None
     AO3Out = None
+    InitSwitch = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
 
     # Events list
     DataEveryNEvent = None
@@ -35,27 +36,33 @@ class ChannelsConfig():
 
     def _InitAnalogInputs(self):
         print('InitAnalogInputs')
+        print(self.Inds)
         self.DCChannelIndex = {}
         self.ACChannelIndex = {}
         InChans = []
         index = 0
         sortindex = 0
         for ch in self.ChNamesList:
-            if self.AcqDC:
-                InChans.append(self.aiChannels[ch][0])
-                self.DCChannelIndex[ch] = (index, sortindex)
-                index += 1
-                print(ch, ' DC -->', self.aiChannels[ch][0])
-                print('SortIndex ->', self.DCChannelIndex[ch])
-            if self.AcqAC:
-                InChans.append(self.aiChannels[ch][1])
-                self.ACChannelIndex[ch] = (index, sortindex)
-                index += 1
-                print(ch, ' AC -->', self.aiChannels[ch][1])
-                print('SortIndex ->', self.ACChannelIndex[ch])
+            if self.Inds <= 1:
+                InChans.append(self.aiChannels[ch])
+                self.DCChannelIndex[ch] = (sortindex, sortindex)
+                self.ACChannelIndex[ch] = (sortindex, sortindex)
+            else:
+                if self.AcqDC:
+                    InChans.append(self.aiChannels[ch][0])
+                    self.DCChannelIndex[ch] = (index, sortindex)
+                    index += 1
+                    print(ch, ' DC -->', self.aiChannels[ch][0])
+                    print('SortIndex ->', self.DCChannelIndex[ch])
+                if self.AcqAC:
+                    InChans.append(self.aiChannels[ch][1])
+                    self.ACChannelIndex[ch] = (index, sortindex)
+                    index += 1
+                    print(ch, ' AC -->', self.aiChannels[ch][1])
+                    print('SortIndex ->', self.ACChannelIndex[ch])
             sortindex += 1
         print('Input ai', InChans)
-
+        print(self.DCChannelIndex)
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
@@ -105,16 +112,19 @@ class ChannelsConfig():
         self.aiChannels = self.MyConf['aiChannels']
         self.doColumns = self.MyConf['ColOuts']
         self.aoChannels = self.MyConf['aoChannels']
+        self.DOSwitch = self.MyConf['DOSwitch']
         self._InitAnalogOutputs(ChVds=self.aoChannels['ChVds'],
                                 ChVs=self.aoChannels['ChVs'],
                                 ChAo2=self.aoChannels['ChAo2'],
                                 ChAo3=self.aoChannels['ChAo3'],
                                 )
+        if Board == 'MainBoard_v3':
+            self.Inds = 1
+        else:
+            self.Inds = 2
 
         self._InitAnalogInputs()
-        # self.ClearSig = np.zeros((1, len(MyConf['ColOuts'])),
-        #                 dtype=np.bool).astype(np.uint8)
-        # self.ClearSig = np.hstack((ClearSig, ClearSig))
+
         self.DigColumns = sorted(DigColumns)
         if self.doColumns:
             self._InitDigitalOutputs()
@@ -125,7 +135,12 @@ class ChannelsConfig():
                     MuxChannelNames.append(Row + Col)
             self.MuxChannelNames = MuxChannelNames
             print(self.MuxChannelNames)
-    
+
+        if self.DOSwitch:
+            self.SwitchOut = DaqInt.WriteDigital(Channels=self.DOSwitch)
+            self.SwitchOut.SetDigitalSignal(Signal=self.InitSwitch)
+            # self.SetDigitalSignal(Signal=self.InitSwitch)
+
     def StartAcquisition(self, Fs, nSampsCo, nBlocks, Vgs, Vds,
                          AnalogOutputs, **kwargs):
         print('StartAcquisition')
@@ -163,9 +178,13 @@ class ChannelsConfig():
 
     def SetDigitalOutputs(self, nSampsCo):
         hwLinesMap = {}
+        IndexDigitalLines = {}
+        i = 0
         for ColName, hwLine in self.doColumns.items():
             il = int(hwLine[0][4:])
             hwLinesMap[il] = (ColName, hwLine)
+            IndexDigitalLines[i] = ColName
+            i += 1
         
         # Gen inverted control output, should be the next one of the digital line ('lineX', 'lineX+1')
         if len(self.doColumns[ColName]) > 1:
@@ -201,15 +220,18 @@ class ChannelsConfig():
         Dout = DOut.astype(np.uint8)
 
         self.SortDInds = SortDInds
-        return Dout
-        # self.DigitalOutputs.SetContSignal(Signal=DOut.astype(np.uint8))
+        # self.DigitalOutputs.SetDigitalSignal(Signal=DOut.astype(np.uint8))
+        return Dout, IndexDigitalLines
 
     def _SortChannels(self, data, SortDict):
         # Sort by aianalog input
         (samps, inch) = data.shape
         aiData = np.zeros((samps, len(SortDict)))
         for chn, inds in sorted(SortDict.items()):
-            aiData[:, inds[1]] = data[:, inds[0]]
+            if self.Inds <= 1:
+                aiData[:, inds] = data[:, inds]
+            else:
+                aiData[:, inds[1]] = data[:, inds[0]]
 
         # Sort by digital columns
         aiData = aiData.transpose()

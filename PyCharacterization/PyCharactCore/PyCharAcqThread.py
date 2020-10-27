@@ -42,7 +42,8 @@ SampSettingConf = ({'title': 'Channels Config',
                                              'MainBoard_16x16',
                                              'Mos2',
                                              'MB41',
-                                             'MB42'], },
+                                             'MB42',
+                                             'MainBoard_v3'], },
                                  {'tittle': 'Row Channels',
                                   'name': 'Channels',
                                   'type': 'group',
@@ -355,7 +356,6 @@ class DataAcquisitionThread(Qt.QThread):
             self.aiData = aiDataDC
             self.aiDataAC = aiDataAC
         else:
-            print('DC')
             self.aiData = aiDataDC
 
         self.NewMuxData.emit()

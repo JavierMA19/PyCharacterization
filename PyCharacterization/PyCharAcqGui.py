@@ -213,12 +213,19 @@ class MainWindow(Qt.QWidget):
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
             DigColumns = self.threadAcq.DaqInterface.DigColumns
 
+            if self.threadAcq.DaqInterface.doColumns:
+                self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
+            else: 
+                IndexDigitalLines = None
+
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
                                                       ChnName=ChannelsNames,
                                                       DigColumns=DigColumns,
+                                                      IndexDigitalLines=IndexDigitalLines,
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                        **self.SweepsKwargs)
+            self.threadCharact.EventCalcAC = self.SwitchSignal
 
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
@@ -228,6 +235,14 @@ class MainWindow(Qt.QWidget):
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
+
+            if self.threadAcq.DaqInterface.doColumns:
+                # self.DO, self.IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
+                print('DigitalSignalllll---->', self.DO)
+                self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=self.DO[:, 0])
+            # NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.DigIndex]
+            # self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
+
 
             # Acquisition part
             # self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
@@ -335,8 +350,10 @@ class MainWindow(Qt.QWidget):
 
     def on_NextDigital(self):
         print('on_NextDigital')
-        NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.NextColumn]
-        print(NewDigitalSignal, '--NewDigitalSignal--')
+        print(self.threadCharact.DigIndex)
+        NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
+        # NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.DigIndex]
+        print(NewDigitalSignal, '--NewDigitalSignal--', self.threadCharact.DigIndex)
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         if self.SamplingPar.Ao2:
             Ao2 = self.SamplingPar.Ao2.value()
@@ -348,6 +365,16 @@ class MainWindow(Qt.QWidget):
                                             Vds=self.threadCharact.NextVds,
                                             ChAo2=Ao2,
                                             ChAo3=Ao3)
+
+    def SwitchSignal(self, Signal):
+        print('SWITCHDCDCDC')
+        AC = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
+        DC = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
+        if Signal == 'AC':
+            print('AC')
+            self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=AC)
+        if Signal == 'DC':
+            self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=DC)
 
     def on_CharactEnd(self):
         print('END Charact')
