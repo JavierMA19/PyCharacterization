@@ -196,7 +196,8 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
-            ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
+            
+            
                 
             # PlotterKwargs = self.PlotParams.GetParams()
 
@@ -214,9 +215,11 @@ class MainWindow(Qt.QWidget):
             DigColumns = self.threadAcq.DaqInterface.DigColumns
 
             if self.threadAcq.DaqInterface.doColumns:
+                ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
                 self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
             else: 
                 IndexDigitalLines = None
+                ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
 
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
