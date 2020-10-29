@@ -196,14 +196,15 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
-            
-            
-                
-            # PlotterKwargs = self.PlotParams.GetParams()
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+
+            print(self.SweepsKwargs)
+            self.AC = self.SweepsKwargs['ACenable']
+            print(self.AC, 'SELF:AC')
+            GenChanKwargs['AcqAC'] = self.AC
 
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
@@ -228,16 +229,19 @@ class MainWindow(Qt.QWidget):
                                                       IndexDigitalLines=IndexDigitalLines,
                                                       PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                        **self.SweepsKwargs)
-            self.threadCharact.EventCalcAC = self.SwitchSignal
 
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            # self.threadCharact.ACenable
+            
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
+
+            if self.threadAcq.DaqInterface.DOSwitch:
+                print('SwitchDigitalBoard')
+                self.threadCharact.EventCalcAC = self.SwitchSignal
 
             if self.threadAcq.DaqInterface.doColumns:
                 # self.DO, self.IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
@@ -311,7 +315,7 @@ class MainWindow(Qt.QWidget):
         #     self.threadSave.AddData(self.threadAcq.OutData.transpose()) # Change for aiData?? TODO
 
         if self.threadCharact is not None: #Flag estable and ACenable
-            if self.threadCharact.Stable and self.AC:
+            if self.threadCharact.Stable and self.threadCharact.ACenable:
                 self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
             else:
                 self.threadCharact.AddData(self.threadAcq.aiData.transpose())

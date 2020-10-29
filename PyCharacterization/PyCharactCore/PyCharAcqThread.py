@@ -16,14 +16,15 @@ import copy
 SampSettingConf = ({'title': 'Channels Config',
                     'name': 'ChsConfig',
                     'type': 'group',
-                    'children': ({'title': 'Acquire DC',
-                                  'name': 'AcqDC',
-                                  'type': 'bool',
-                                  'value': True},
-                                 {'title': 'Acquire AC',
-                                  'name': 'AcqAC',
-                                  'type': 'bool',
-                                  'value': False},
+                    'children': (
+                                 # {'title': 'Acquire DC',
+                                 #  'name': 'AcqDC',
+                                 #  'type': 'bool',
+                                 #  'value': True},
+                                 # {'title': 'Acquire AC',
+                                 #  'name': 'AcqAC',
+                                 #  'type': 'bool',
+                                 #  'value': False},
                                  {'title': 'Gain DC',
                                   'name': 'DCGain',
                                   'type': 'float',
@@ -155,7 +156,7 @@ class SampSetParam(pTypes.GroupParameter):
         self.ColChannels = self.ChsConfig.param('DigColumns')
 
         # Init Settings
-        self.on_Acq_Changed()
+        # self.on_Acq_Changed()
         self.on_Row_Changed()
         self.on_Col_Changed()
         self.on_Fs_Changed()
@@ -167,8 +168,8 @@ class SampSetParam(pTypes.GroupParameter):
         self.RowChannels.sigTreeStateChanged.connect(self.on_Row_Changed)
         self.ColChannels.sigTreeStateChanged.connect(self.on_Col_Changed)
         self.AnalogOutputs.sigTreeStateChanged.connect(self.on_Ao_Changed)
-        self.ChsConfig.param('AcqAC').sigValueChanged.connect(self.on_Acq_Changed)
-        self.ChsConfig.param('AcqDC').sigValueChanged.connect(self.on_Acq_Changed)
+        # self.ChsConfig.param('AcqAC').sigValueChanged.connect(self.on_Acq_Changed)
+        # self.ChsConfig.param('AcqDC').sigValueChanged.connect(self.on_Acq_Changed)
         self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
         self.SampsCo.sigValueChanged.connect(self.on_Fs_Changed)
         self.nBlocks.sigValueChanged.connect(self.on_Fs_Changed)
@@ -200,10 +201,13 @@ class SampSetParam(pTypes.GroupParameter):
             self.ColChannels.clearChildren()
 
             if self.HwSettings['ColOuts']:
-                for i in sorted(self.HwSettings['ColOuts']):
-                    cc = copy.deepcopy(ChannelParam)
-                    cc['name'] = i
-                    self.ColChannels.addChild(cc)
+                if type(self.HwSettings['ColOuts']) == list:
+                    print('do nothing')
+                else:
+                    for i in sorted(self.HwSettings['ColOuts']):
+                        cc = copy.deepcopy(ChannelParam)
+                        cc['name'] = i
+                        self.ColChannels.addChild(cc)
 
     def GetAnalogOutputs(self):
         print('GetAnalogOutputs')
@@ -216,13 +220,13 @@ class SampSetParam(pTypes.GroupParameter):
                     cc['name'] = i
                     self.AnalogOutputs.addChild(cc)
 
-    def on_Acq_Changed(self):
-        for p in self.ChsConfig.children():
-            if p.name() is 'AcqAC':
-                self.Acq[p.name()] = p.value()
-            if p.name() is 'AcqDC':
-                self.Acq[p.name()] = p.value()
-        self.NewConf.emit()
+    # def on_Acq_Changed(self):
+    #     for p in self.ChsConfig.children():
+    #         if p.name() is 'AcqAC':
+    #             self.Acq[p.name()] = p.value()
+    #         if p.name() is 'AcqDC':
+    #             self.Acq[p.name()] = p.value()
+    #     self.NewConf.emit()
 
     def on_Fs_Changed(self):
         Ts = 1/self.Fs.value()
@@ -246,11 +250,11 @@ class SampSetParam(pTypes.GroupParameter):
         self.on_Fs_Changed()
         self.NewConf.emit()
 
-    # def on_Ao_Changed(self):
-    #     self.Ao = {}
-    #     for p in self.AnalogOutputs.children():
-    #         self.Ao[p.name()] = p.value()
-    #     self.NewConf.emit()
+    def on_Ao_Changed(self):
+        self.Ao = {}
+        for p in self.AnalogOutputs.children():
+            self.Ao[p.name()] = p.value()
+        self.NewConf.emit()
 
     def on_Ao_Changed(self):
         self.Ao = {}
@@ -271,15 +275,15 @@ class SampSetParam(pTypes.GroupParameter):
         Ind = 0
         RowNames = {}
 
-        if self.ChsConfig.param('AcqDC').value():
-            for Row in self.Rows:
-                RowNames[Row + 'DC'] = Ind
-                Ind += 1
+        # if self.ChsConfig.param('AcqDC').value():
+        for Row in self.Rows:
+            RowNames[Row] = Ind
+            Ind += 1
 
-        if self.ChsConfig.param('AcqAC').value():
-            for Row in self.Rows:
-                RowNames[Row + 'AC'] = Ind
-                Ind += 1
+        # if self.ChsConfig.param('AcqAC').value():
+        #     for Row in self.Rows:
+        #         RowNames[Row + 'AC'] = Ind
+        #         Ind += 1
 
         return RowNames
 
@@ -288,12 +292,12 @@ class SampSetParam(pTypes.GroupParameter):
         ChannelNames = {}
         ChannelsDCNames = {}
 
-        if self.ChsConfig.param('AcqDC').value():
-            for Row in self.Rows:
-                ChannelsDCNames[Row] = Ind                   
-                for Col in self.Columns:
-                    ChannelNames[Row + Col] = Ind
-                    Ind += 1
+        # if self.ChsConfig.param('AcqDC').value():
+        for Row in self.Rows:
+            ChannelsDCNames[Row] = Ind                   
+            for Col in self.Columns:
+                ChannelNames[Row + Col] = Ind
+                Ind += 1
 
         # if self.ChsConfig.param('AcqAC').value():
         #     for Row in self.Rows:
@@ -346,9 +350,6 @@ class DataAcquisitionThread(Qt.QThread):
         self.DaqInterface.StartAcquisition(**self.SampKw)
         loop = Qt.QEventLoop()
         loop.exec_()
-
-    def CalcAverage(self, MuxData):
-        return np.mean(MuxData[:, self.AvgIndex:, :], axis=1)
 
     def NewData(self, aiDataDC, aiDataAC):
         if aiDataAC is not None:

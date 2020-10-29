@@ -29,6 +29,7 @@ class ChannelsConfig():
     AO2Out = None
     AO3Out = None
     InitSwitch = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
+    DOSwitch = None
 
     # Events list
     DataEveryNEvent = None
@@ -83,6 +84,10 @@ class ChannelsConfig():
 
         self.DigitalOutputs = DaqInt.WriteDigital(Channels=DOChannels)
 
+    def _InitDecoderOutputs(self):
+        self.Decoder = DaqInt.WriteDigital(Channels=self.doColumns)
+        print('InitDecoderOutputs')
+
     def _InitAnalogOutputs(self, ChVds, ChVs, ChAo2, ChAo3):
         print('ChVds ->', ChVds)
         print('ChVs ->', ChVs)
@@ -101,9 +106,10 @@ class ChannelsConfig():
         # self._InitAnalogOutputs(ChVds=ChVds, ChVs=ChVs)
 
         self.ChNamesList = sorted(Channels)
+        # Fix AC and DC config as True
         print(self.ChNamesList)
         self.AcqAC = AcqAC
-        self.AcqDC = AcqDC
+        self.AcqDC = True
         self.ACGain = ACGain
         self.DCGain = DCGain
         print('Board---->', Board)
@@ -127,7 +133,10 @@ class ChannelsConfig():
 
         self.DigColumns = sorted(DigColumns)
         if self.doColumns:
-            self._InitDigitalOutputs()
+            if type(self.doColumns) == list:
+                self._InitDecoderOutputs()
+            else:
+                self._InitDigitalOutputs()
 
             MuxChannelNames = []
             for Row in self.ChNamesList:
@@ -152,9 +161,15 @@ class ChannelsConfig():
             ChAo2 = None
             ChAo3 = None
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
+
         if self.doColumns:
-            self.DO = self.SetDigitalOutputs(nSampsCo=nSampsCo)
+            if type(self.doColumns) == list:
+                DO = self.DecoderDigital(5)
+                self.DO = np.array(DO, dtype=np.uint8)
+            else:
+                self.DO = self.SetDigitalOutputs(nSampsCo=nSampsCo)
         print('DSig set')
+
         self.nBlocks = nBlocks
         self.nSampsCo = nSampsCo
 #        self.OutputShape = (nColumns * nRows, nSampsCh, nblocs)
@@ -222,6 +237,12 @@ class ChannelsConfig():
         self.SortDInds = SortDInds
         # self.DigitalOutputs.SetDigitalSignal(Signal=DOut.astype(np.uint8))
         return Dout, IndexDigitalLines
+
+    def DecoderDigital(self, n):
+        if n < 1:
+            return[[]]
+        subtable = self.DecoderDigital(n-1)
+        return [row+[v] for row in subtable for v in [0,1]]
 
     def _SortChannels(self, data, SortDict):
         # Sort by aianalog input
