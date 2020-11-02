@@ -87,7 +87,7 @@ class ChannelsConfig():
 
     def _InitDecoderOutputs(self):
         
-        self.DigitalOutputs = DaqInt.WriteDigital(Channels=['port0/line10:15', ])
+        self.DigitalOutputs = DaqInt.WriteDigital(Channels=['port0/line9:15', ])
         print('InitDecoderOutputs')
 
     def _InitAnalogOutputs(self, ChVds, ChVs, ChAo2, ChAo3):

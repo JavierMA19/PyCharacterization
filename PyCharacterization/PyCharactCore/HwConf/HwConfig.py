@@ -307,7 +307,7 @@ MainBoard_v3 = {'aiChannels': {'Ch01': 'ai8',
                     'Col31': None,
                     'Col32': None,
                     }, 
-        'DOSwitch': ['port0/line0:9', ],
+        'DOSwitch': ['port0/line0:8', ],
                      }
 
 
