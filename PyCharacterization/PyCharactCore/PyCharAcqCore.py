@@ -30,7 +30,8 @@ class ChannelsConfig():
     AO3Out = None
     InitSwitch = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
     DOSwitch = None
-
+    DO = None
+    IndexDigitalLines = None
     # Events list
     DataEveryNEvent = None
     DataDoneEvent = None
@@ -85,7 +86,8 @@ class ChannelsConfig():
         self.DigitalOutputs = DaqInt.WriteDigital(Channels=DOChannels)
 
     def _InitDecoderOutputs(self):
-        self.Decoder = DaqInt.WriteDigital(Channels=self.doColumns)
+        
+        self.DigitalOutputs = DaqInt.WriteDigital(Channels=['port0/line10:15', ])
         print('InitDecoderOutputs')
 
     def _InitAnalogOutputs(self, ChVds, ChVs, ChAo2, ChAo3):
@@ -133,7 +135,7 @@ class ChannelsConfig():
 
         self.DigColumns = sorted(DigColumns)
         if self.doColumns:
-            if type(self.doColumns) == list:
+            if self.doColumns['Col01'] is None:
                 self._InitDecoderOutputs()
             else:
                 self._InitDigitalOutputs()
@@ -163,11 +165,12 @@ class ChannelsConfig():
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
 
         if self.doColumns:
-            if type(self.doColumns) == list:
-                DO = self.DecoderDigital(5)
+            if self.doColumns['Col01'] is None:
+                DO, self.IndexDigitalLines = self.GetDecoderSignal()
                 self.DO = np.array(DO, dtype=np.uint8)
             else:
-                self.DO = self.SetDigitalOutputs(nSampsCo=nSampsCo)
+                self.DO, self.IndexDigitalLines = self.SetDigitalOutputs(nSampsCo=nSampsCo)
+
         print('DSig set')
 
         self.nBlocks = nBlocks
@@ -231,19 +234,35 @@ class ChannelsConfig():
                 Cout = Lout        
             DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
 
-        SortDIndsL = [inds for inds in SortDInds] 
+        SortDIndsL = [inds for inds in SortDInds]
         Dout = DOut.astype(np.uint8)
 
         self.SortDInds = SortDInds
         # self.DigitalOutputs.SetDigitalSignal(Signal=DOut.astype(np.uint8))
         return Dout, IndexDigitalLines
 
+    def GetDecoderSignal(self):
+        print('GETDECODERSIGNAL')
+        Decoder = self.DecoderDigital(5)
+        Dec = np.array(Decoder, dtype=np.uint8)
+        DOut = np.array([])
+        IndexDigitalLines = {}
+
+        index = 0
+        for n, i in self.doColumns.items():
+            if n in self.DigColumns:
+                IndexDigitalLines[index] = n
+                Cout = Dec[index]
+                DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
+            index += 1
+        return DOut.transpose(), IndexDigitalLines
+        
     def DecoderDigital(self, n):
         if n < 1:
             return[[]]
         subtable = self.DecoderDigital(n-1)
         return [row+[v] for row in subtable for v in [0,1]]
-
+    
     def _SortChannels(self, data, SortDict):
         # Sort by aianalog input
         (samps, inch) = data.shape

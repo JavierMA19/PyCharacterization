@@ -217,10 +217,15 @@ class MainWindow(Qt.QWidget):
 
             if self.threadAcq.DaqInterface.doColumns:
                 ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
-                self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
+                if self.threadAcq.DaqInterface.doColumns['Col01'] is None:
+                    self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.GetDecoderSignal()
+                else:
+                    self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
             else: 
                 IndexDigitalLines = None
                 ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
+
+            print('IndexDigitalLines', IndexDigitalLines)
 
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=self.PlotParams.GetParams()['nChannels'],
