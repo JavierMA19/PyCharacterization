@@ -254,7 +254,7 @@ class ChannelsConfig():
                 IndexDigitalLines[index] = n
                 Cout = Dec[index]
                 DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
-            index += 1
+                index += 1
         return DOut.transpose(), IndexDigitalLines
         
     def DecoderDigital(self, n):
