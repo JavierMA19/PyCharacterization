@@ -126,8 +126,9 @@ class ChannelsConfig():
                                 ChAo2=self.aoChannels['ChAo2'],
                                 ChAo3=self.aoChannels['ChAo3'],
                                 )
+
         if Board == 'MainBoard_v3' or 'MainBoard_v3_mux':
-            self.Inds = 1
+            self.Inds = 1 # Modify name TODO
         else:
             self.Inds = 2
 
