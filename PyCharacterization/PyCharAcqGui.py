@@ -63,8 +63,8 @@ class MainWindow(Qt.QWidget):
                                            children=(self.SamplingPar,))
 
         self.SamplingPar.NewConf.connect(self.on_NewConf)
-        self.SamplingPar.Fs.sigValueChanged.connect(self.on_FsChanged)
-        self.SamplingPar.FsxCh.sigValueChanged.connect(self.on_FsxChChanged)
+        # self.SamplingPar.Fs.sigValueChanged.connect(self.on_FsChanged)
+        # self.SamplingPar.FsxCh.sigValueChanged.connect(self.on_FsxChChanged)
 
         self.SwParams = Charact.SweepsConfig(QTparent=self, name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
@@ -101,17 +101,17 @@ class MainWindow(Qt.QWidget):
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
                                                            name='Configuration File')
         self.Parameters.addChild(self.ConfigParameters)
-        self.on_FsChanged()
-        self.on_FsxChChanged()
+        # self.on_FsChanged()
+        # self.on_FsxChChanged()
         self.on_NewConf()
 
-    def on_FsChanged(self):
-        self.RawPlotParams.param('Fs').setValue(self.SamplingPar.Fs.value())
+    # def on_FsChanged(self):
+    #     self.RawPlotParams.param('Fs').setValue(self.SamplingPar.Fs.value())
 
-    def on_FsxChChanged(self):
-        print('FSXCH', self.SamplingPar.FsxCh.value())
-        self.PlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
-        self.PsdPlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
+    # def on_FsxChChanged(self):
+    #     print('FSXCH', self.SamplingPar.FsxCh.value())
+    #     self.PlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
+    #     self.PsdPlotParams.param('Fs').setValue(self.SamplingPar.FsxCh.value())
 
     # def on_pars_changed(self, param, changes):
     #     print("tree changes:")
@@ -195,7 +195,7 @@ class MainWindow(Qt.QWidget):
         if self.threadAcq is None:
             self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
-            AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
+            # AvgIndex = self.SamplingPar.SampSet.param('nAvg').value()
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
@@ -209,7 +209,7 @@ class MainWindow(Qt.QWidget):
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=self.GenKwargs,
-                                                          AvgIndex=AvgIndex,
+                                                          # AvgIndex=AvgIndex,
                                                           )
 
             self.threadAcq.NewMuxData.connect(self.on_NewSample)

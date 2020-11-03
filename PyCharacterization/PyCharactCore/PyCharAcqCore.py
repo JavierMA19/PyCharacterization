@@ -127,9 +127,11 @@ class ChannelsConfig():
                                 ChAo3=self.aoChannels['ChAo3'],
                                 )
 
-        if Board == 'MainBoard_v3' or 'MainBoard_v3_mux':
+        if Board == 'MainBoard_v3' or Board == 'MainBoard_v3_mux':
+            print('INDEX===1')
             self.Inds = 1 # Modify name TODO
         else:
+            print('INDEX===2')
             self.Inds = 2
 
         self._InitAnalogInputs()
@@ -153,8 +155,7 @@ class ChannelsConfig():
             self.SwitchOut.SetDigitalSignal(Signal=self.InitSwitch)
             # self.SetDigitalSignal(Signal=self.InitSwitch)
 
-    def StartAcquisition(self, Fs, nSampsCo, nBlocks, Vgs, Vds,
-                         AnalogOutputs, **kwargs):
+    def StartAcquisition(self, Vgs, Vds, AnalogOutputs, **kwargs):
         print('StartAcquisition')
         print(AnalogOutputs)
         if AnalogOutputs:
@@ -163,6 +164,7 @@ class ChannelsConfig():
         else:
             ChAo2 = None
             ChAo3 = None
+
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
 
         if self.doColumns:
@@ -170,17 +172,15 @@ class ChannelsConfig():
                 DO, self.IndexDigitalLines = self.GetDecoderSignal()
                 self.DO = np.array(DO, dtype=np.uint8)
             else:
-                self.DO, self.IndexDigitalLines = self.SetDigitalOutputs(nSampsCo=nSampsCo)
+                self.DO, self.IndexDigitalLines = self.SetDigitalOutputs()
 
-        print('DSig set')
-
-        self.nBlocks = nBlocks
-        self.nSampsCo = nSampsCo
+        # self.nBlocks = nBlocks
+        # self.nSampsCo = nSampsCo
 #        self.OutputShape = (nColumns * nRows, nSampsCh, nblocs)
         # self.OutputShape = (len(self.MuxChannelNames), nSampsCo, nBlocks)
-        EveryN = nSampsCo*nBlocks
-        self.AnalogInputs.ReadContData(Fs=Fs,
-                                       EverySamps=EveryN)
+        # EveryN = nSampsCo*nBlocks
+        self.AnalogInputs.ReadContData(Fs=1000,
+                                       EverySamps=1000)
 
     def SetBias(self, Vgs, Vds, ChAo2, ChAo3):
         print('ChannelsConfig SetBias Vgs ->', Vgs, 'Vds ->', Vds,
@@ -195,7 +195,7 @@ class ChannelsConfig():
         self.Vgs = Vgs
         self.Vds = Vds
 
-    def SetDigitalOutputs(self, nSampsCo):
+    def SetDigitalOutputs(self):
         hwLinesMap = {}
         IndexDigitalLines = {}
         i = 0
@@ -211,22 +211,21 @@ class ChannelsConfig():
         else:
             GenInvert = False
 
-        nSampsCo = 1
         # Gen sorted indexes for demuxing
         SortIndDict = {}
         for ic, coln in enumerate(sorted(self.DigColumns)):
             SortIndDict[coln] = ic
         
         DOut = np.array([], dtype=np.bool)
-        SortDInds = np.zeros((len(self.DigColumns), nSampsCo), dtype=np.int64)
+        SortDInds = np.zeros((len(self.DigColumns), 1), dtype=np.int64)
         SwitchOrder = 0
         for il, (nLine, (LineName, hwLine)) in enumerate(sorted(hwLinesMap.items())):
-            Lout = np.zeros((1, nSampsCo*len(self.DigColumns)), dtype=np.bool)    
+            Lout = np.zeros((1, len(self.DigColumns)), dtype=np.bool)    
             if LineName in self.DigColumns:
                 # print(il, nLine, hwLine, LineName)
-                Lout[0, nSampsCo * SwitchOrder: nSampsCo * (SwitchOrder + 1)] = True
-                SortDInds[SortIndDict[LineName], : ] = np.arange(nSampsCo * SwitchOrder,
-                                                             nSampsCo * (SwitchOrder + 1) )
+                Lout[0, SwitchOrder: (SwitchOrder + 1)] = True
+                SortDInds[SortIndDict[LineName], : ] = np.arange(SwitchOrder,
+                                                              * (SwitchOrder + 1) )
                 SwitchOrder += 1
             
             if GenInvert:
