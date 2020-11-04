@@ -78,8 +78,8 @@ class MainWindow(Qt.QWidget):
         self.RawPlotParams = TimePltPars(name='RawPlot')
         # self.Parameters.addChild(self.RawPlotParams)
 
-        self.PsdPlotParams = PSDPltPars(name='PSDPlt',
-                                        title='PSD Plot Options')
+        # self.PsdPlotParams = PSDPltPars(name='PSDPlt',
+        #                                 title='PSD Plot Options')
         # self.Parameters.addChild(self.PsdPlotParams)
 
         self.treepar = ParameterTree()
@@ -138,19 +138,19 @@ class MainWindow(Qt.QWidget):
     #             self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data,
     #                                                 ChAo2=None, ChAo3=None)
 
-    def on_NewPSDConf(self):
-        if self.threadPSDPlotter is not None:
-            nFFT = self.PsdPlotParams.param('nFFT').value()
-            nAvg = self.PsdPlotParams.param('nAvg').value()
-            self.threadPSDPlotter.InitBuffer(nFFT=nFFT, nAvg=nAvg)
+    # def on_NewPSDConf(self):
+    #     if self.threadPSDPlotter is not None:
+    #         nFFT = self.PsdPlotParams.param('nFFT').value()
+    #         nAvg = self.PsdPlotParams.param('nAvg').value()
+    #         self.threadPSDPlotter.InitBuffer(nFFT=nFFT, nAvg=nAvg)
 
     def on_NewConf(self):
         # self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
         self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames()[1])
         self.RawPlotParams.SetChannels(self.SamplingPar.GetRowNames())
-        self.PsdPlotParams.ChannelConf = self.PlotParams.ChannelConf
+        # self.PsdPlotParams.ChannelConf = self.PlotParams.ChannelConf
         nChannels = self.PlotParams.param('nChannels').value()
-        self.PsdPlotParams.param('nChannels').setValue(nChannels)
+        # self.PsdPlotParams.param('nChannels').setValue(nChannels)
 
     def on_NewPlotConf(self):
         if self.threadPlotter is not None:
@@ -181,10 +181,10 @@ class MainWindow(Qt.QWidget):
             self.threadPlotter = TimePlt(**Pltkw)
             self.threadPlotter.start()
 
-        if self.PsdPlotParams.param('PlotEnable').value():
-            PSDKwargs = self.PsdPlotParams.GetParams()
-            self.threadPSDPlotter = PSDPlt(**PSDKwargs)
-            self.threadPSDPlotter.start()
+        # if self.PsdPlotParams.param('PlotEnable').value():
+        #     PSDKwargs = self.PsdPlotParams.GetParams()
+        #     self.threadPSDPlotter = PSDPlt(**PSDKwargs)
+        #     self.threadPSDPlotter.start()
 
         if self.RawPlotParams.param('PlotEnable').value():
             RwPltkw = self.RawPlotParams.GetParams()
@@ -201,6 +201,10 @@ class MainWindow(Qt.QWidget):
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
 
+            # PSD Parameters
+            self.PSDKwargs = self.SwParams.GetPSDParams()[0]
+            print(self.PSDKwargs)
+            # ({'Fs': 1000.0, 'PSDnAvg': 5, '2**nFFT': 14, 'PSD Duration': 20.0}, True)
             print(self.SweepsKwargs)
             self.AC = self.SweepsKwargs['ACenable']
             print(self.AC, 'SELF:AC')
@@ -232,7 +236,8 @@ class MainWindow(Qt.QWidget):
                                                       ChnName=ChannelsNames,
                                                       DigColumns=DigColumns,
                                                       IndexDigitalLines=IndexDigitalLines,
-                                                      PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
+                                                      PlotterDemodKwargs=self.PSDKwargs,
+                                                      # PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                        **self.SweepsKwargs)
 
             self.threadCharact.NextVg.connect(self.on_NextVg)
