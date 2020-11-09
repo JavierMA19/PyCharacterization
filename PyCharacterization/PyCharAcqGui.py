@@ -203,13 +203,14 @@ class MainWindow(Qt.QWidget):
 
             # PSD Parameters
             self.PSDKwargs = self.SwParams.GetPSDParams()[0]
+            self.AC = self.SwParams.GetPSDParams()[1]
             print(self.PSDKwargs)
             # ({'Fs': 1000.0, 'PSDnAvg': 5, '2**nFFT': 14, 'PSD Duration': 20.0}, True)
             print(self.SweepsKwargs)
-            self.AC = self.SweepsKwargs['ACenable']
+            # self.AC = self.SweepsKwargs['ACenable']
             print(self.AC, 'SELF:AC')
             GenChanKwargs['AcqAC'] = self.AC
-
+            self.SweepsKwargs['ACenable'] = self.AC
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=self.GenKwargs,
