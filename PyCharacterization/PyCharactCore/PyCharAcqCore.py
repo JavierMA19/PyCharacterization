@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb 19 10:57:58 2020
@@ -5,13 +6,6 @@ Created on Wed Feb 19 10:57:58 2020
 @author: Javier
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar  5 14:13:45 2019
-
-@author: aguimera
-"""
 import PyqtTools.DaqInterface as DaqInt
 import numpy as np
 import PyCharactCore.HwConf.HwConfig as BoardConf
@@ -196,6 +190,7 @@ class ChannelsConfig():
         self.Vds = Vds
 
     def SetDigitalOutputs(self):
+        print('SetDigitalOutputs')
         hwLinesMap = {}
         IndexDigitalLines = {}
         i = 0
@@ -249,12 +244,13 @@ class ChannelsConfig():
         IndexDigitalLines = {}
 
         index = 0
+       
         for n, i in self.doColumns.items():
             if n in self.DigColumns:
                 IndexDigitalLines[index] = n
                 Cout = Dec[index]
                 DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
-                index += 1
+            index += 1
         return DOut.transpose(), IndexDigitalLines
         
     def DecoderDigital(self, n):
