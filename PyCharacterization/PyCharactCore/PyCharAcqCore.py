@@ -244,13 +244,16 @@ class ChannelsConfig():
         IndexDigitalLines = {}
 
         index = 0
+        DigIndex = 0
        
         for n, i in self.doColumns.items():
             if n in self.DigColumns:
-                IndexDigitalLines[index] = n
+                IndexDigitalLines[DigIndex] = n
                 Cout = Dec[index]
                 DOut = np.vstack((DOut, Cout)) if DOut.size else Cout
+                DigIndex += 1
             index += 1
+        print(IndexDigitalLines, 'IndexDigitalLines')
         return DOut.transpose(), IndexDigitalLines
         
     def DecoderDigital(self, n):
