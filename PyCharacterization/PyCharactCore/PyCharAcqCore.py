@@ -22,7 +22,7 @@ class ChannelsConfig():
     MyConf = None
     AO2Out = None
     AO3Out = None
-    InitSwitch = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
+    InitSwitch = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
     DOSwitch = None
     DO = None
     IndexDigitalLines = None

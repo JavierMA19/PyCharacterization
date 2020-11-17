@@ -386,8 +386,8 @@ class MainWindow(Qt.QWidget):
 
     def SwitchSignal(self, Signal):
         print('SWITCHDCDCDC')
-        AC = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
-        DC = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
+        AC = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
+        DC = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
         if Signal == 'AC':
             print('AC')
             self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=AC)
