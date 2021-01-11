@@ -129,6 +129,10 @@ class ChannelsConfig():
             self.Inds = 2
 
         self._InitAnalogInputs()
+        
+        if self.DOSwitch:
+            self.SwitchOut = DaqInt.WriteDigital(Channels=self.DOSwitch)
+            self.SwitchOut.SetDigitalSignal(Signal=self.InitSwitch)
 
         self.DigColumns = sorted(DigColumns)
         if self.doColumns:
@@ -144,10 +148,10 @@ class ChannelsConfig():
             self.MuxChannelNames = MuxChannelNames
             print(self.MuxChannelNames)
 
-        if self.DOSwitch:
-            self.SwitchOut = DaqInt.WriteDigital(Channels=self.DOSwitch)
-            self.SwitchOut.SetDigitalSignal(Signal=self.InitSwitch)
-            # self.SetDigitalSignal(Signal=self.InitSwitch)
+        # if self.DOSwitch:
+        #     self.SwitchOut = DaqInt.WriteDigital(Channels=self.DOSwitch)
+        #     self.SwitchOut.SetDigitalSignal(Signal=self.InitSwitch)
+        #     # self.SetDigitalSignal(Signal=self.InitSwitch)
 
     def StartAcquisition(self, Vgs, Vds, AnalogOutputs, **kwargs):
         print('StartAcquisition')
@@ -220,7 +224,7 @@ class ChannelsConfig():
                 # print(il, nLine, hwLine, LineName)
                 Lout[0, SwitchOrder: (SwitchOrder + 1)] = True
                 SortDInds[SortIndDict[LineName], : ] = np.arange(SwitchOrder,
-                                                              * (SwitchOrder + 1) )
+                                                                (SwitchOrder + 1) )
                 SwitchOrder += 1
             
             if GenInvert:

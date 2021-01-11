@@ -95,14 +95,14 @@ MainBoard_8x8 = {'aiChannels': {'Ch01': ('ai0', 'ai8'),
                                 'ChAo2': None,
                                 'ChAo3': None, },
 
-                 'ColOuts': {'Col1': ('line0', 'line1'),
-                             'Col2': ('line2', 'line3'),
-                             'Col3': ('line4', 'line5'),
-                             'Col4': ('line6', 'line7'),
-                             'Col5': ('line8', 'line9'),
-                             'Col6': ('line10', 'line11'),
-                             'Col7': ('line12', 'line13'),
-                             'Col8': ('line14', 'line15'),
+                 'ColOuts': {'Col01': ('line0', 'line1'),
+                             'Col02': ('line2', 'line3'),
+                             'Col03': ('line4', 'line5'),
+                             'Col04': ('line6', 'line7'),
+                             'Col05': ('line8', 'line9'),
+                             'Col06': ('line10', 'line11'),
+                             'Col07': ('line12', 'line13'),
+                             'Col08': ('line14', 'line15'),
                              },
                  'DOSwitch': None,
                  }
@@ -276,7 +276,7 @@ MainBoard_v3 = {'aiChannels': {'Ch01': 'ai8',
 
                 'ColOuts': None, 
 
-                'DOSwitch': ['port0/line0:9', ],
+                'DOSwitch': ['port0/line0:8', ],
                 }
 
 MainBoard_v3_mux = {'aiChannels': {'Ch01': 'ai8',
