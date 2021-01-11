@@ -174,14 +174,16 @@ class MainWindow(Qt.QWidget):
             else: 
                 IndexDigitalLines = None
                 ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
-
+            
+            DCChannelsNames = self.SamplingPar.GetChannelsNames()[1]
+            print(DCChannelsNames)
             print('IndexDigitalLines', IndexDigitalLines)
             print('ChannelsNames', ChannelsNames)
             print(len(ChannelsNames))
 
             self.threadCharact = Charact.StbDetThread(
                                                       # nChannels=self.PlotParams.GetParams()['nChannels'],
-                                                      nChannels=len(ChannelsNames),
+                                                      nChannels=len(DCChannelsNames),
                                                       ChnName=ChannelsNames,
                                                       DigColumns=DigColumns,
                                                       IndexDigitalLines=IndexDigitalLines,
