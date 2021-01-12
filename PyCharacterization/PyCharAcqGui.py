@@ -207,7 +207,13 @@ class MainWindow(Qt.QWidget):
             if self.threadAcq.DaqInterface.doColumns:
                 # self.DO, self.IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs(nSampsCo=1)
                 print('DigitalSignalllll---->', self.DO)
-                self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=self.DO[:, 0])
+                time.sleep(2)
+                if len(self.DO.shape) == 1:
+                    signal = self.DO
+                else:
+                    signal = self.DO[:, 0]
+                    
+                self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
             # NewDigitalSignal = self.threadAcq.DaqInterface.DO[:, self.threadCharact.DigIndex]
             # self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
 
@@ -219,8 +225,12 @@ class MainWindow(Qt.QWidget):
             #                                               )
 
             # self.threadAcq.NewMuxData.connect(self.on_NewSample)
+            if self.AC:
+                DevACVals = self.threadCharact.SaveDCAC.DevACVals
+            else:
+                DevACVals = None
             self.CharPlot = Plotter(self.threadCharact.SaveDCAC.DevDCVals,
-                                    self.threadCharact.SaveDCAC.DevACVals)
+                                    DevACVals)
             
             self.threadCharact.start()
             self.threadAcq.start()
@@ -282,12 +292,12 @@ class MainWindow(Qt.QWidget):
         if self.threadCharact is not None: #Flag estable and ACenable
             if self.threadCharact.Stable and self.threadCharact.ACenable:
                 self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
-                self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
-                                          VdInd=self.threadCharact.VdIndex)
+                # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+                #                           VdInd=self.threadCharact.VdIndex)
             else:
                 self.threadCharact.AddData(self.threadAcq.aiData.transpose())
-                self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
-                                          VdInd=self.threadCharact.VdIndex)
+            self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+                                      VdInd=self.threadCharact.VdIndex)
 
         # if self.threadPlotter is not None:
         #     self.threadPlotter.AddData(self.threadAcq.OutDataDC.transpose())
@@ -344,8 +354,8 @@ class MainWindow(Qt.QWidget):
 
     def SwitchSignal(self, Signal):
         print('SWITCHDCDCDC')
-        AC = np.array([1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
-        DC = np.array([0, 1, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
+        AC = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
+        DC = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
         if Signal == 'AC':
             print('AC')
             self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=AC)
