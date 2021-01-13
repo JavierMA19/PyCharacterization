@@ -17,14 +17,6 @@ SampSettingConf = ({'title': 'Channels Config',
                     'name': 'ChsConfig',
                     'type': 'group',
                     'children': (
-                                 # {'title': 'Acquire DC',
-                                 #  'name': 'AcqDC',
-                                 #  'type': 'bool',
-                                 #  'value': True},
-                                 # {'title': 'Acquire AC',
-                                 #  'name': 'AcqAC',
-                                 #  'type': 'bool',
-                                 #  'value': False},
                                  {'title': 'Gain DC',
                                   'name': 'DCGain',
                                   'type': 'float',
@@ -61,60 +53,6 @@ SampSettingConf = ({'title': 'Channels Config',
                     {'name': 'Sampling Settings',
                      'type': 'group',
                      'children': (
-                                 # {'title': 'Sampling Frequency',
-                                 #   'name': 'Fs',
-                                 #   'type': 'float',
-                                 #   'value': 30e3,
-                                 #   'step': 100,
-                                 #   'siPrefix': True,
-                                 #   'suffix': 'Hz'},
-                                 #  {'title': 'Column Samples',
-                                 #   'name': 'nSampsCo',
-                                 #   'type': 'int',
-                                 #   'value': 200,
-                                 #   'step': 1,
-                                 #   'limits': (1, 10000)},
-                                 #  {'title': 'Acquired Blocks',
-                                 #   'name': 'nBlocks',
-                                 #   'type': 'int',
-                                 #   'value': 200,
-                                 #   'step': 10,
-                                 #   'limits': (10, 10000)},
-                                 #  {'title': 'Averaging',
-                                 #   'name': 'nAvg',
-                                 #   'type': 'int',
-                                 #   'value': 5,
-                                 #   'step': 1,
-                                 #   'limits': (1, 10)},
-                                 #  {'title': 'Interrup Time',
-                                 #   'name': 'Inttime',
-                                 #   'type': 'float',
-                                 #   'value': 0.10,
-                                 #   'step': 0.01,
-                                 #   'limits': (0.10, 50),
-                                 #   'siPrefix': True,
-                                 #   'suffix': 's',
-                                 #   'readonly': True},
-                                 #  {'title': 'Fs by Channel',
-                                 #   'name': 'FsxCh',
-                                 #   'type': 'float',
-                                 #   'value': 1e4,
-                                 #   'step': 100,
-                                 #   'siPrefix': True,
-                                 #   'suffix': 'Hz',
-                                 #   'readonly': True},
-                                 #  # {'title': '_Vds',
-                                 #  #  'name': 'Vds',
-                                 #  #  'type': 'float',
-                                 #  #  'value': 0.05,
-                                 #  #  'step': 0.01,
-                                 #  #  'limits': (-0.1, 0.1)},
-                                 #  # {'title': '_Vgs',
-                                 #  #  'name': 'Vgs',
-                                 #  #  'type': 'float',
-                                 #  #  'value': 0.1,
-                                 #  #  'step': 0.1,
-                                 #  #  'limits': (-0.1, 0.5)},
                                  {'tittle': 'Analog Outputs',
                                   'name': 'AnalogOutputs',
                                   'type': 'group',
@@ -146,10 +84,6 @@ class SampSetParam(pTypes.GroupParameter):
         self.addChildren(SampSettingConf)
 
         self.SampSet = self.param('Sampling Settings')
-        # self.Fs = self.SampSet.param('Fs')
-        # self.FsxCh = self.SampSet.param('FsxCh')
-        # self.SampsCo = self.SampSet.param('nSampsCo')
-        # self.nBlocks = self.SampSet.param('nBlocks')
         self.AnalogOutputs = self.SampSet.param('AnalogOutputs')
 
         self.ChsConfig = self.param('ChsConfig')
@@ -158,10 +92,8 @@ class SampSetParam(pTypes.GroupParameter):
         self.ColChannels = self.ChsConfig.param('DigColumns')
 
         # Init Settings
-        # self.on_Acq_Changed()
         self.on_Row_Changed()
         self.on_Col_Changed()
-        # self.on_Fs_Changed()
         self.on_Ao_Changed()
 
         print(self.children())
@@ -170,11 +102,6 @@ class SampSetParam(pTypes.GroupParameter):
         self.RowChannels.sigTreeStateChanged.connect(self.on_Row_Changed)
         self.ColChannels.sigTreeStateChanged.connect(self.on_Col_Changed)
         self.AnalogOutputs.sigTreeStateChanged.connect(self.on_Ao_Changed)
-        # self.ChsConfig.param('AcqAC').sigValueChanged.connect(self.on_Acq_Changed)
-        # self.ChsConfig.param('AcqDC').sigValueChanged.connect(self.on_Acq_Changed)
-        # self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
-        # self.SampsCo.sigValueChanged.connect(self.on_Fs_Changed)
-        # self.nBlocks.sigValueChanged.connect(self.on_Fs_Changed)
 
     def Hardware_Selection(self):
         print('Hardware_Selection')
@@ -184,7 +111,6 @@ class SampSetParam(pTypes.GroupParameter):
         self.GetChannelsChildren()
         self.GetColsChildren()
         self.GetAnalogOutputs()
-        # self.on_Fs_Changed()
 
     def GetChannelsChildren(self):
         print('GetChannelsChildren')
@@ -222,21 +148,6 @@ class SampSetParam(pTypes.GroupParameter):
                     cc['name'] = i
                     self.AnalogOutputs.addChild(cc)
 
-    # def on_Acq_Changed(self):
-    #     for p in self.ChsConfig.children():
-    #         if p.name() is 'AcqAC':
-    #             self.Acq[p.name()] = p.value()
-    #         if p.name() is 'AcqDC':
-    #             self.Acq[p.name()] = p.value()
-    #     self.NewConf.emit()
-
-    # def on_Fs_Changed(self):
-    #     Ts = 1/self.Fs.value()
-    #     FsxCh = 1/(Ts*self.SampsCo.value())
-    #     IntTime = (1/(FsxCh)*self.nBlocks.value())
-    #     self.SampSet.param('FsxCh').setValue(FsxCh)
-    #     self.SampSet.param('Inttime').setValue(IntTime)
-
     def on_Row_Changed(self):
         self.Rows = []
         for p in self.RowChannels.children():
@@ -252,12 +163,6 @@ class SampSetParam(pTypes.GroupParameter):
         # self.on_Fs_Changed()
         self.NewConf.emit()
 
-    # def on_Ao_Changed(self):
-    #     self.Ao = {}
-    #     for p in self.AnalogOutputs.children():
-    #         self.Ao[p.name()] = p.value()
-    #     self.NewConf.emit()
-
     def on_Ao_Changed(self):
         self.Ao = {}
         for p in self.AnalogOutputs.children():
@@ -267,8 +172,9 @@ class SampSetParam(pTypes.GroupParameter):
         self.NewConf.emit()
         if 'ChAo2' in self.Ao:
             self.Ao2 = self.AnalogOutputs.param('ChAo2')
-        else: self.Ao2 = None
-        if 'ChAo3' in self.Ao:       
+        else: 
+            self.Ao2 = None
+        if 'ChAo3' in self.Ao:
             self.Ao3 = self.AnalogOutputs.param('ChAo3')
         else:
             self.Ao3 = None
@@ -277,15 +183,9 @@ class SampSetParam(pTypes.GroupParameter):
         Ind = 0
         RowNames = {}
 
-        # if self.ChsConfig.param('AcqDC').value():
         for Row in self.Rows:
             RowNames[Row] = Ind
             Ind += 1
-
-        # if self.ChsConfig.param('AcqAC').value():
-        #     for Row in self.Rows:
-        #         RowNames[Row + 'AC'] = Ind
-        #         Ind += 1
 
         return RowNames
 
@@ -294,18 +194,11 @@ class SampSetParam(pTypes.GroupParameter):
         ChannelNames = {}
         ChannelsDCNames = {}
 
-        # if self.ChsConfig.param('AcqDC').value():
         for Row in self.Rows:
             ChannelsDCNames[Row] = Ind                   
             for Col in self.Columns:
                 ChannelNames[Row + Col] = Ind
                 Ind += 1
-
-        # if self.ChsConfig.param('AcqAC').value():
-        #     for Row in self.Rows:
-        #         for Col in self.Columns:
-        #             ChannelNames[Row + Col + 'AC'] = Ind
-        #             Ind += 1
 
         return ChannelNames, ChannelsDCNames
 
