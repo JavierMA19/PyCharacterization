@@ -127,7 +127,8 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            
+
+            self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
@@ -177,12 +178,19 @@ class MainWindow(Qt.QWidget):
         self.OldTime = time.time()
 
         if self.threadCharact is not None: #Flag estable and ACenable
+            print('on_NewSample')
             if self.threadCharact.Stable and self.threadCharact.ACenable:
                 self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
+
+                # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+                #                           VdInd=self.threadCharact.VdIndex)
+
             else:
                 self.threadCharact.AddData(self.threadAcq.aiData.transpose())
-            self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
-                                      VdInd=self.threadCharact.VdIndex)
+
+                # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+                #                           VdInd=self.threadCharact.VdIndex)
+
 
         print('sample time', Ts, np.mean(self.Tss))
 
@@ -193,6 +201,9 @@ class MainWindow(Qt.QWidget):
         else:
             Ao2 = None
             Ao3 = None
+        # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+        #                           VdInd=self.threadCharact.VdIndex)
+
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             ChAo2=Ao2,
@@ -206,6 +217,10 @@ class MainWindow(Qt.QWidget):
         else:
             Ao2 = None
             Ao3 = None
+
+        # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+        #                           VdInd=self.threadCharact.VdIndex)
+
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             ChAo2=Ao2,
@@ -227,6 +242,12 @@ class MainWindow(Qt.QWidget):
                                             Vds=self.threadCharact.NextVds,
                                             ChAo2=Ao2,
                                             ChAo3=Ao3)
+
+    def on_RefreshPlots(self):
+        print('Refresh Plots')
+        self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
+                                  VdInd=self.threadCharact.VdIndex)
+
 
     def SwitchSignal(self, Signal):
         print('SWITCHDCDCDC')
