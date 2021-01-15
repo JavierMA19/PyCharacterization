@@ -244,11 +244,14 @@ class DataAcquisitionThread(Qt.QThread):
         loop.exec_()
 
     def NewData(self, aiDataDC, aiDataAC):
-        if aiDataAC is not None:
-            print('AC--DC')
-            self.aiData = aiDataDC
-            self.aiDataAC = aiDataAC
-        else:
-            self.aiData = aiDataDC
+        self.aiDataDC = aiDataDC
+        self.aiDataAC = aiDataAC
+
+        # if aiDataAC is not None:
+        #     print('AC--DC')
+        #     self.aiData = aiDataDC
+        #     self.aiDataAC = aiDataAC
+        # else:
+        #     self.aiData = aiDataDC
 
         self.NewMuxData.emit()
