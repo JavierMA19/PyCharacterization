@@ -7,7 +7,6 @@ Created on Wed Feb 19 10:56:29 2020
 
 from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
-import numpy as np
 import PyCharactCore.PyCharAcqCore as CoreMod
 import PyCharactCore.HwConf.HwConfig as BoardConf
 import copy
@@ -50,9 +49,9 @@ SampSettingConf = ({'title': 'Channels Config',
 
                                  ), },
 
-                    {'name': 'Sampling Settings',
-                     'type': 'group',
-                     'children': (
+                   {'name': 'Sampling Settings',
+                    'type': 'group',
+                    'children': (
                                  {'tittle': 'Analog Outputs',
                                   'name': 'AnalogOutputs',
                                   'type': 'group',
@@ -77,7 +76,6 @@ class SampSetParam(pTypes.GroupParameter):
     Rows = []
     Acq = {}
     HwSettings = {}
-
 
     def __init__(self, **kwargs):
         super(SampSetParam, self).__init__(**kwargs)
@@ -172,7 +170,7 @@ class SampSetParam(pTypes.GroupParameter):
         self.NewConf.emit()
         if 'ChAo2' in self.Ao:
             self.Ao2 = self.AnalogOutputs.param('ChAo2')
-        else: 
+        else:
             self.Ao2 = None
         if 'ChAo3' in self.Ao:
             self.Ao3 = self.AnalogOutputs.param('ChAo3')
@@ -195,7 +193,7 @@ class SampSetParam(pTypes.GroupParameter):
         ChannelsDCNames = {}
 
         for Row in self.Rows:
-            ChannelsDCNames[Row] = Ind                   
+            ChannelsDCNames[Row] = Ind
             for Col in self.Columns:
                 ChannelNames[Row + Col] = Ind
                 Ind += 1
@@ -247,7 +245,7 @@ class DataAcquisitionThread(Qt.QThread):
 
     def NewData(self, aiDataDC, aiDataAC):
         if aiDataAC is not None:
-            print('AC--DC')       
+            print('AC--DC')
             self.aiData = aiDataDC
             self.aiDataAC = aiDataAC
         else:

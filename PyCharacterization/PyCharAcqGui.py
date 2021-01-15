@@ -14,10 +14,9 @@ from qtpy.QtWidgets import (QHeaderView, QCheckBox, QSpinBox, QLineEdit,
                             QTableWidget, QAction, QMessageBox, QFileDialog,
                             QInputDialog)
 
-from qtpy import QtWidgets, uic
+from qtpy import QtWidgets
 import numpy as np
 import time
-import os
 import sys
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
@@ -38,10 +37,7 @@ class MainWindow(Qt.QWidget):
         self.threadAcq = None
         self.threadSave = None
         self.threadPlotter = None
-        self.threadPSDPlotter = None
-        self.threadPlotterRaw = None
         self.threadCharact = None
-        self.RefreshGrapg = None
 
         layout = Qt.QVBoxLayout(self)
 
@@ -68,7 +64,7 @@ class MainWindow(Qt.QWidget):
         self.btnAcq.clicked.connect(self.on_btnStart)
 
         self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
-                                                          name='Record File')
+                                                         name='Record File')
 
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
                                                            name='Configuration File')
@@ -84,70 +80,71 @@ class MainWindow(Qt.QWidget):
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
 
             # PSD Parameters
-            self.PSDKwargs = self.SwParams.GetPSDParams()[0]
-            self.AC = self.SwParams.GetPSDParams()[1]
-            GenChanKwargs['AcqAC'] = self.AC
-            self.SweepsKwargs['ACenable'] = self.AC
+            PSDKwargs, AcEnable = self.SwParams.GetPSDParams()
+            GenChanKwargs['AcqAC'] = AcEnable
+            self.SweepsKwargs['ACenable'] = AcEnable
 
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=self.GenKwargs,
-                                                          # AvgIndex=AvgIndex,
                                                           )
-
+            # Signals
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
+
             DigColumns = self.threadAcq.DaqInterface.DigColumns
+            MuxChannelsNames, ChannelsNames = self.SamplingPar.GetChannelsNames()
+
+            # Determine what digital signal it has to be implemented
+            # It can be for the decoder electronics, for the
+            # multiplexing electronics or for normal electronics
 
             if self.threadAcq.DaqInterface.doColumns:
-                ChannelsNames = self.SamplingPar.GetChannelsNames()[0]
+                ChNames = MuxChannelsNames
                 if self.threadAcq.DaqInterface.doColumns['Col01'] is None:
                     self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.GetDecoderSignal()
                 else:
                     self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs()
-            else: 
+            else:
                 IndexDigitalLines = None
-                ChannelsNames = self.SamplingPar.GetChannelsNames()[1]
-            
-            DCChannelsNames = self.SamplingPar.GetChannelsNames()[1]
-            print(DCChannelsNames)
-            print('IndexDigitalLines', IndexDigitalLines)
-            print('ChannelsNames', ChannelsNames)
-            print(len(ChannelsNames))
+                ChNames = ChannelsNames
 
+            # Characterization Part
             self.threadCharact = Charact.StbDetThread(
-                                                      nChannels=len(DCChannelsNames),
-                                                      ChnName=ChannelsNames,
+                                                      nChannels=len(ChannelsNames),
+                                                      ChnName=ChNames,
                                                       DigColumns=DigColumns,
                                                       IndexDigitalLines=IndexDigitalLines,
-                                                      PlotterDemodKwargs=self.PSDKwargs,
-                                                      # PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
-                                                       **self.SweepsKwargs)
+                                                      PSDKwargs=PSDKwargs,
+                                                      **self.SweepsKwargs)
 
+            # Charact Signals
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
+<<<<<<< Updated upstream
 
             self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
+=======
+>>>>>>> Stashed changes
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
+            # If MainBoardv3 --> Connects the switch event
             if self.threadAcq.DaqInterface.DOSwitch:
-                print('SwitchDigitalBoard')
                 self.threadCharact.EventCalcAC = self.SwitchSignal
 
             if self.threadAcq.DaqInterface.doColumns:
-                print('DigitalSignalllll---->', self.DO)
                 time.sleep(4)
                 if len(self.DO.shape) == 1:
                     signal = self.DO
                 else:
                     signal = self.DO[:, 0]
-
+                print('InitDigitalOutputs')
                 self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
 
-            if self.AC:
+            if AcEnable:
                 DevACVals = self.threadCharact.SaveDCAC.DevACVals
             else:
                 DevACVals = None
@@ -172,13 +169,18 @@ class MainWindow(Qt.QWidget):
             self.btnAcq.setText("Start Gen")
 
     def on_NewSample(self):
+        print('on_newSample')
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
         self.Tss.append(Ts)
         self.OldTime = time.time()
 
+<<<<<<< Updated upstream
         if self.threadCharact is not None: #Flag estable and ACenable
             print('on_NewSample')
+=======
+        if self.threadCharact is not None:  # Flag estable and ACenable
+>>>>>>> Stashed changes
             if self.threadCharact.Stable and self.threadCharact.ACenable:
                 self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
 
@@ -228,9 +230,7 @@ class MainWindow(Qt.QWidget):
 
     def on_NextDigital(self):
         print('on_NextDigital')
-        print(self.threadCharact.DigIndex)
         NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
-        print(NewDigitalSignal, '--NewDigitalSignal--', self.threadCharact.DigIndex)
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         if self.SamplingPar.Ao2:
             Ao2 = self.SamplingPar.Ao2.value()
@@ -271,7 +271,7 @@ class MainWindow(Qt.QWidget):
                                               Acdict=CharactACDict,
                                               **self.DcSaveKwargs)
         self.threadAcq.NewMuxData.disconnect()
-        
+
         self.threadAcq.DaqInterface.Stop()
         self.threadAcq.terminate()
         self.threadAcq = None
