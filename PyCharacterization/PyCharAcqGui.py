@@ -122,11 +122,7 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-<<<<<<< Updated upstream
-
             self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
-=======
->>>>>>> Stashed changes
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
