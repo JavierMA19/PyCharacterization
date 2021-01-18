@@ -80,9 +80,9 @@ class MainWindow(Qt.QWidget):
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
 
             # PSD Parameters
-            PSDKwargs, AcEnable = self.SwParams.GetPSDParams()
-            GenChanKwargs['AcqAC'] = AcEnable
-            self.SweepsKwargs['ACenable'] = AcEnable
+            PSDKwargs, self.AcEnable = self.SwParams.GetPSDParams()
+            GenChanKwargs['AcqAC'] = self.AcEnable
+            self.SweepsKwargs['ACenable'] = self.AcEnable
 
             # Acquisition part
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
@@ -118,7 +118,7 @@ class MainWindow(Qt.QWidget):
                                                       **self.SweepsKwargs)
 
             # Charact Signals
-            self.threadCharact.Bias.connect(self.on_NextBias)
+            self.threadCharact.NextBias.connect(self.on_NextBias)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
             self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
@@ -139,7 +139,7 @@ class MainWindow(Qt.QWidget):
                 print('InitDigitalOutputs')
                 self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
 
-            if AcEnable:
+            if self.AcEnable:
                 DevACVals = self.threadCharact.SaveDCAC.DevACVals
             else:
                 DevACVals = None
@@ -170,8 +170,13 @@ class MainWindow(Qt.QWidget):
         self.Tss.append(Ts)
         self.OldTime = time.time()
 
-        self.threadcharact.AddData(self.threadAcq.aiDataDC.transpose(),
-                                   self.threadAcq.aiDataAC.transpose())
+        if self.AcEnable:
+            ACData = self.threadAcq.aiDataAC.transpose()
+        else:
+            ACData = None
+
+        self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
+                                   ACData)
 
         # if self.threadCharact is not None: #Flag estable and ACenable
         #     print('on_NewSample')
