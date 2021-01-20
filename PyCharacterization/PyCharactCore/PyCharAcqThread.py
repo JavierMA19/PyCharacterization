@@ -229,11 +229,14 @@ class SampSetParam(pTypes.GroupParameter):
 
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
+    NewDoneACData = Qt.pyqtSignal()
 
     def __init__(self, ChannelsConfigKW, SampKw):
         super(DataAcquisitionThread, self).__init__()
         self.DaqInterface = CoreMod.ChannelsConfig(**ChannelsConfigKW)
         self.DaqInterface.DataEveryNEvent = self.NewData
+        self.DaqInterface.DataDoneNEvent = self.NewDoneData
+
         self.SampKw = SampKw
         print('SampKWKWKW')
         print(SampKw)
@@ -255,3 +258,8 @@ class DataAcquisitionThread(Qt.QThread):
         #     self.aiData = aiDataDC
 
         self.NewMuxData.emit()
+
+    def NewDoneData(self, aiDataAC):
+        self.aiDataACDone = aiDataAC
+        
+        self.NewDoneACData.emit()

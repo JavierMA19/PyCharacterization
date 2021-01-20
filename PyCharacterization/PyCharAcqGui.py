@@ -90,6 +90,7 @@ class MainWindow(Qt.QWidget):
                                                           )
             # Signals
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
+            self.threadAcq.NewDoneACData.connect(self.on_NewDataDone)
 
             DigColumns = self.threadAcq.DaqInterface.DigColumns
             MuxChannelsNames, ChannelsNames = self.SamplingPar.GetChannelsNames()
@@ -117,19 +118,22 @@ class MainWindow(Qt.QWidget):
                                                       PSDKwargs=PSDKwargs,
                                                       **self.SweepsKwargs)
 
+            # Charact Events
+            # If MainBoardv3 --> Connects the switch event
+            if self.threadAcq.DaqInterface.DOSwitch:
+                self.threadCharact.EventSwitch = self.SwitchSignal
+            self.threadCharact.EventReadData = self.ReadNewData
+
+
             # Charact Signals
             self.threadCharact.NextBias.connect(self.on_NextBias)
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
             self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
-            self.threadCharact.ReadDaqInt.connect(self.ReadNewData)
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
-            # If MainBoardv3 --> Connects the switch event
-            if self.threadAcq.DaqInterface.DOSwitch:
-                self.threadCharact.EventSwitch = self.SwitchSignal
 
             if self.threadAcq.DaqInterface.doColumns:
                 time.sleep(4)
@@ -180,6 +184,10 @@ class MainWindow(Qt.QWidget):
                                    ACData)
 
         print('sample time', Ts, np.mean(self.Tss))
+        
+    def on_NewDataDone(self):
+        self.threadCharact.CalcPSD(self.threadAcq.aiDataACDone.transpose())
+
 
     def on_NextBias(self):
         print('NEXT SWEEP')
@@ -195,18 +203,17 @@ class MainWindow(Qt.QWidget):
                                             ChAo2=Ao2,
                                             ChAo3=Ao3)
 
+    def ReadNewData(self, Fs, nSamps, EverySamps):
+        print('ReadChannelsData')
+        self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
+                                                     nSamps=nSamps,
+                                                     EverySamps=EverySamps)
+
     def on_NextDigital(self):
         print('on_NextDigital')
         NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         self.on_NextBias()
-
-    def ReadNewData(self, Fs, nSamps, EverySamps):
-        print('ReadChannelsData')
-        self.threadCharact.
-        self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
-                                                     nSamps=nSamps,
-                                                     EverySamps=EverySamps)
 
     def on_RefreshPlots(self):
         print('Refresh Plots')
