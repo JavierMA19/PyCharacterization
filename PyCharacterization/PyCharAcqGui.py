@@ -122,6 +122,7 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.NextDigital.connect(self.on_NextDigital)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
             self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
+            self.threadCharact.ReadDaqInt.connect(self.ReadNewData)
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
@@ -178,21 +179,6 @@ class MainWindow(Qt.QWidget):
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
                                    ACData)
 
-        # if self.threadCharact is not None: #Flag estable and ACenable
-        #     print('on_NewSample')
-        #     if self.threadCharact.Stable and self.threadCharact.ACenable:
-        #         self.threadCharact.AddData(self.threadAcq.aiDataAC.transpose())
-
-        #         # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
-        #         #                           VdInd=self.threadCharact.VdIndex)
-
-        #     else:
-        #         self.threadCharact.AddData(self.threadAcq.aiData.transpose())
-
-        #         # self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
-        #         #                           VdInd=self.threadCharact.VdIndex)
-
-
         print('sample time', Ts, np.mean(self.Tss))
 
     def on_NextBias(self):
@@ -214,16 +200,13 @@ class MainWindow(Qt.QWidget):
         NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         self.on_NextBias()
-        # if self.SamplingPar.Ao2:
-        #     Ao2 = self.SamplingPar.Ao2.value()
-        #     Ao3 = self.SamplingPar.Ao3.value()
-        # else:
-        #     Ao2 = None
-        #     Ao3 = None
-        # self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
-        #                                     Vds=self.threadCharact.NextVds,
-        #                                     ChAo2=Ao2,
-        #                                     ChAo3=Ao3)
+
+    def ReadNewData(self, Fs, nSamps, EverySamps):
+        print('ReadChannelsData')
+        self.threadCharact.
+        self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
+                                                     nSamps=nSamps,
+                                                     EverySamps=EverySamps)
 
     def on_RefreshPlots(self):
         print('Refresh Plots')

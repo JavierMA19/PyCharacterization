@@ -157,7 +157,7 @@ class ChannelsConfig():
             ChAo3 = None
 
         self.SetBias(Vgs=Vgs, Vds=Vds, ChAo2=ChAo2, ChAo3=ChAo3)
-
+        self.ReadChannelsData(Fs=1000, nSamps=1000, EverySamps=1000)
         # if self.doColumns:
         #     if self.doColumns['Col01'] is None:
         #         DO, self.IndexDigitalLines = self.GetDecoderSignal()
@@ -165,8 +165,11 @@ class ChannelsConfig():
         #     else:
         #         self.DO, self.IndexDigitalLines = self.SetDigitalOutputs()
 
-        self.AnalogInputs.ReadContData(Fs=1000,
-                                       EverySamps=1000)
+    def ReadChannelsData(self, Fs, nSamps, EverySamps):
+        print('ReadChannelsData')
+        self.AnalogInputs.ReadData(Fs=Fs,
+                                   nSamps=nSamps,
+                                   EverySamps=EverySamps)
 
     def SetBias(self, Vgs, Vds, ChAo2, ChAo3):
         print('ChannelsConfig SetBias Vgs ->', Vgs, 'Vds ->', Vds,
