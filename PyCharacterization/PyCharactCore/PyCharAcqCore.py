@@ -290,11 +290,11 @@ class ChannelsConfig():
     def DoneEventCallBack(self, Data):
         _DataDoneNEvent = self.DataDoneEvent
         aiDataAC = None
-        if _DataDoneNEvent is not None:
+        if _DataDoneNEvent:
             aiDataAC = self._SortChannels(Data, self.ACChannelIndex)
             aiDataAC = aiDataAC / self.ACGain
-        print('Done callback')
-        _DataDoneNEvent(aiDataAC)
+            print('Done callback')
+            _DataDoneNEvent(aiDataAC)
 
     def Stop(self):
         print('Stopppp')

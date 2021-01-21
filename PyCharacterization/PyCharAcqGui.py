@@ -122,14 +122,18 @@ class MainWindow(Qt.QWidget):
             # If MainBoardv3 --> Connects the switch event
             if self.threadAcq.DaqInterface.DOSwitch:
                 self.threadCharact.EventSwitch = self.SwitchSignal
-            self.threadCharact.EventReadData = self.ReadNewData
 
+            self.threadCharact.EventReadData = self.ReadNewData
+            self.threadCharact.EventNextBias = self.on_NextBias
+            self.threadCharact.EventNextDigital = self.on_NextDigital
+            self.threadCharact.EventCharactEnd = self.on_CharactEnd
+            self.threadCharact.EventRefreshPlots = self.on_RefreshPlots
 
             # Charact Signals
-            self.threadCharact.NextBias.connect(self.on_NextBias)
-            self.threadCharact.NextDigital.connect(self.on_NextDigital)
-            self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
+            # self.threadCharact.NextBias.connect(self.on_NextBias)
+            # self.threadCharact.NextDigital.connect(self.on_NextDigital)
+            # self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
+            # self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
@@ -151,7 +155,7 @@ class MainWindow(Qt.QWidget):
             self.CharPlot = Plotter(self.threadCharact.SaveDCAC.DevDCVals,
                                     DevACVals)
 
-            self.threadCharact.start()
+            # self.threadCharact.start()
             self.threadAcq.start()
             self.CharPlot.start()
 
@@ -233,9 +237,9 @@ class MainWindow(Qt.QWidget):
 
     def on_CharactEnd(self):
         print('END Charact')
-        self.threadCharact.NextVg.disconnect()
-        self.threadCharact.NextVd.disconnect()
-        self.threadCharact.CharactEnd.disconnect()
+        # self.threadCharact.NextVg.disconnect()
+        # self.threadCharact.NextVd.disconnect()
+        # self.threadCharact.CharactEnd.disconnect()
         # CharactDCDict = self.threadCharact.DCDict
         # CharactACDict = self.threadCharact.ACDict
         # TODO check this saving
