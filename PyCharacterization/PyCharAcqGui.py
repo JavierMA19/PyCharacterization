@@ -190,6 +190,7 @@ class MainWindow(Qt.QWidget):
         print('sample time', Ts, np.mean(self.Tss))
         
     def on_NewDataDone(self):
+        print('on_NewDataDone')
         self.threadCharact.CalcPSD(self.threadAcq.aiDataACDone.transpose())
 
 
@@ -209,6 +210,9 @@ class MainWindow(Qt.QWidget):
 
     def ReadNewData(self, Fs, nSamps, EverySamps):
         print('ReadChannelsData')
+        print(Fs,
+              nSamps,
+              EverySamps)
         self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
                                                      nSamps=nSamps,
                                                      EverySamps=EverySamps)
