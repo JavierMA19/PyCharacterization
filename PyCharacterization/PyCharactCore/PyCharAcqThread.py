@@ -247,6 +247,7 @@ class DataAcquisitionThread(Qt.QThread):
         loop.exec_()
 
     def NewData(self, aiDataDC, aiDataAC):
+        print('NewData')
         self.aiDataDC = aiDataDC
         self.aiDataAC = aiDataAC
 
@@ -260,6 +261,6 @@ class DataAcquisitionThread(Qt.QThread):
         self.NewMuxData.emit()
 
     def NewDoneData(self, aiDataAC):
+        print('NewDoneData')
         self.aiDataACDone = aiDataAC
-        
         self.NewDoneACData.emit()

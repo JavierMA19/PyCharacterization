@@ -288,6 +288,7 @@ class ChannelsConfig():
             _DataEveryNEvent(aiDataDC, aiDataAC, )
 
     def DoneEventCallBack(self, Data):
+        print('DoneEventCallback')
         _DataDoneNEvent = self.DataDoneEvent
         aiDataAC = None
         if _DataDoneNEvent:
