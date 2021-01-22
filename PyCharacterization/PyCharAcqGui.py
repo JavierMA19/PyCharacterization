@@ -90,7 +90,7 @@ class MainWindow(Qt.QWidget):
                                                           )
             # Signals
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
-            self.threadAcq.NewDoneACData.connect(self.on_NewDataDone)
+            # self.threadAcq.NewDoneACData.connect(self.on_NewDataDone)
 
             DigColumns = self.threadAcq.DaqInterface.DigColumns
             MuxChannelsNames, ChannelsNames = self.SamplingPar.GetChannelsNames()
@@ -179,13 +179,15 @@ class MainWindow(Qt.QWidget):
         self.Tss.append(Ts)
         self.OldTime = time.time()
 
-        if self.AcEnable:
-            ACData = self.threadAcq.aiDataAC.transpose()
-        else:
-            ACData = None
+        # if self.AcEnable:
+        #     ACData = self.threadAcq.aiDataAC.transpose()
+        # else:
+        #     ACData = None
 
+        # self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
+        #                            ACData)
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-                                   ACData)
+                                   self.threadAcq.aiDataAC.transpose())
 
         print('sample time', Ts, np.mean(self.Tss))
         

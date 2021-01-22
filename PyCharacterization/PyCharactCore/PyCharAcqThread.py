@@ -234,8 +234,9 @@ class DataAcquisitionThread(Qt.QThread):
     def __init__(self, ChannelsConfigKW, SampKw):
         super(DataAcquisitionThread, self).__init__()
         self.DaqInterface = CoreMod.ChannelsConfig(**ChannelsConfigKW)
-        self.DaqInterface.DataEveryNEvent = self.NewData
-        self.DaqInterface.DataDoneNEvent = self.NewDoneData
+        # TIme view plot
+        # self.DaqInterface.DataEveryNEvent = self.NewData
+        self.DaqInterface.DataDoneNEvent = self.NewData
 
         self.SampKw = SampKw
         print('SampKWKWKW')
@@ -260,7 +261,7 @@ class DataAcquisitionThread(Qt.QThread):
 
         self.NewMuxData.emit()
 
-    def NewDoneData(self, aiDataAC):
-        print('NewDoneData')
-        self.aiDataACDone = aiDataAC
-        self.NewDoneACData.emit()
+    # def NewDoneData(self, aiDataDC, aiDataAC):
+    #     print('NewDoneData')
+    #     self.aiDataACDone = aiDataAC
+    #     self.NewDoneACData.emit()
