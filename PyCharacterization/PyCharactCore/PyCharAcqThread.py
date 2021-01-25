@@ -189,14 +189,16 @@ class SampSetParam(pTypes.GroupParameter):
 
     def GetChannelsNames(self):
         Ind = 0
+        nInd = 0
         ChannelNames = {}
         ChannelsDCNames = {}
 
         for Row in self.Rows:
-            ChannelsDCNames[Row] = Ind
+            ChannelsDCNames[Row] = nInd
             for Col in self.Columns:
                 ChannelNames[Row + Col] = Ind
                 Ind += 1
+            nInd += 1
 
         return ChannelNames, ChannelsDCNames
 

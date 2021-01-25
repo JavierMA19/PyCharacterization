@@ -138,7 +138,6 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
-
             if self.threadAcq.DaqInterface.doColumns:
                 time.sleep(4)
                 if len(self.DO.shape) == 1:
@@ -179,22 +178,17 @@ class MainWindow(Qt.QWidget):
         self.Tss.append(Ts)
         self.OldTime = time.time()
 
-        # if self.AcEnable:
-        #     ACData = self.threadAcq.aiDataAC.transpose()
-        # else:
-        #     ACData = None
+        if self.AcEnable:
+            ACData = self.threadAcq.aiDataAC.transpose()
+        else:
+            ACData = None
 
-        # self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-        #                            ACData)
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-                                   self.threadAcq.aiDataAC.transpose())
+                                    ACData)
+        # self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
+        #                            self.threadAcq.aiDataAC.transpose())
 
         print('sample time', Ts, np.mean(self.Tss))
-        
-    def on_NewDataDone(self):
-        print('on_NewDataDone')
-        self.threadCharact.CalcPSD(self.threadAcq.aiDataACDone.transpose())
-
 
     def on_NextBias(self):
         print('NEXT SWEEP')
@@ -211,10 +205,6 @@ class MainWindow(Qt.QWidget):
                                             ChAo3=Ao3)
 
     def ReadNewData(self, Fs, nSamps, EverySamps):
-        print('ReadChannelsData')
-        print(Fs,
-              nSamps,
-              EverySamps)
         self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
                                                      nSamps=nSamps,
                                                      EverySamps=EverySamps)
@@ -226,10 +216,8 @@ class MainWindow(Qt.QWidget):
         self.on_NextBias()
 
     def on_RefreshPlots(self):
-        print('Refresh Plots')
         self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
                                   VdInd=self.threadCharact.VdIndex)
-
 
     def SwitchSignal(self, Signal):
         print('SWITCHDCDCDC')
