@@ -195,6 +195,13 @@ class ChannelsConfig():
             IndexDigitalLines[i] = ColName
             i += 1
 
+        j = 0
+        NewInd = {}
+        for i, c in sorted(hwLinesMap.items()):
+            for n in self.DigColumns:
+                if n == c[0]:
+                    NewInd[j] = c[0]
+                    j += 1
         # Gen inverted control output, should be the next one of the
         # digital line ('lineX', 'lineX+1')
 
@@ -205,8 +212,10 @@ class ChannelsConfig():
 
         # Gen sorted indexes for demuxing
         SortIndDict = {}
+        NewIndex = {}
         for ic, coln in enumerate(sorted(self.DigColumns)):
             SortIndDict[coln] = ic
+            NewIndex[ic] = coln
 
         DOut = np.array([], dtype=np.bool)
         SortDInds = np.zeros((len(self.DigColumns), 1), dtype=np.int64)
@@ -230,7 +239,8 @@ class ChannelsConfig():
         Dout = DOut.astype(np.uint8)
         self.SortDInds = SortDInds
 
-        return Dout, IndexDigitalLines
+        # return Dout, IndexDigitalLines
+        return Dout, NewInd
 
     def GetDecoderSignal(self):
         print('GETDECODERSIGNAL')
