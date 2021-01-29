@@ -90,7 +90,6 @@ class MainWindow(Qt.QWidget):
                                                           )
             # Signals
             self.threadAcq.NewMuxData.connect(self.on_NewSample)
-            # self.threadAcq.NewDoneACData.connect(self.on_NewDataDone)
 
             DigColumns = self.threadAcq.DaqInterface.DigColumns
             MuxChannelsNames, ChannelsNames = self.SamplingPar.GetChannelsNames()
@@ -100,15 +99,21 @@ class MainWindow(Qt.QWidget):
             # multiplexing electronics or for normal electronics
 
             if self.threadAcq.DaqInterface.doColumns:
+                print('----->>>', self.threadAcq.DaqInterface.doColumns)
                 ChNames = MuxChannelsNames
                 if self.threadAcq.DaqInterface.doColumns['Col01'] is None:
                     self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.GetDecoderSignal()
                 else:
                     self.DO, IndexDigitalLines = self.threadAcq.DaqInterface.SetDigitalOutputs()
+
+                if len(self.DO) == 0:
+                    print('NOT DO')
+                    ChNames = ChannelsNames
+                    IndexDigitalLines = None
             else:
                 IndexDigitalLines = None
                 ChNames = ChannelsNames
-
+            print('<----', self.DO)
             # Characterization Part
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=len(ChannelsNames),
@@ -138,7 +143,8 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
-            if self.threadAcq.DaqInterface.doColumns:
+            # if self.threadAcq.DaqInterface.doColumns:
+            if len(self.DO) >= 1:
                 time.sleep(4)
                 if len(self.DO.shape) == 1:
                     signal = self.DO
@@ -204,18 +210,19 @@ class MainWindow(Qt.QWidget):
                                             ChAo2=Ao2,
                                             ChAo3=Ao3)
 
-    def ReadNewData(self, Fs, nSamps, EverySamps):
-        self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
-                                                     nSamps=nSamps,
-                                                     EverySamps=EverySamps)
-
     def on_NextDigital(self):
         print('on_NextDigital')
         NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         self.on_NextBias()
 
+    def ReadNewData(self, Fs, nSamps, EverySamps):
+        self.threadAcq.DaqInterface.ReadChannelsData(Fs=Fs,
+                                                     nSamps=nSamps,
+                                                     EverySamps=EverySamps)
+
     def on_RefreshPlots(self):
+        print('Refresh Plots')
         self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
                                   VdInd=self.threadCharact.VdIndex)
 
