@@ -36,7 +36,6 @@ class MainWindow(Qt.QWidget):
 
         self.threadAcq = None
         self.threadSave = None
-        self.threadPlotter = None
         self.threadCharact = None
 
         layout = Qt.QVBoxLayout(self)
@@ -51,6 +50,8 @@ class MainWindow(Qt.QWidget):
 
         self.SwParams = Charact.SweepsConfig(QTparent=self, name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
+
+        self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
 
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -68,7 +69,20 @@ class MainWindow(Qt.QWidget):
 
         self.ConfigParameters = FileMod.SaveSateParameters(QTparent=self,
                                                            name='Configuration File')
-        self.Parameters.addChild(self.ConfigParameters)
+        self.Parameters.addChild(self.ConfigParameters)      
+
+    def on_pars_changed(self, param, changes):
+        for param, change, data in changes:
+            path = self.Parameters.childPath(param)
+            if path is not None:
+                childName = '.'.join(path)
+            else:
+                childName = param.name()
+
+        if childName == 'Sweeps Configuration.SweepsConfig.MaxSlope':
+            if self.threadCharact:
+                self.threadCharact.MaxSlope = data
+
 
     def on_btnStart(self):
         if self.threadAcq is None:
@@ -78,6 +92,7 @@ class MainWindow(Qt.QWidget):
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+            self.DevCond = self.SweepsKwargs['MaxSlope']
 
             # PSD Parameters
             PSDKwargs, self.AcEnable = self.SwParams.GetPSDParams()
@@ -121,7 +136,7 @@ class MainWindow(Qt.QWidget):
                                                       IndexDigitalLines=IndexDigitalLines,
                                                       PSDKwargs=PSDKwargs,
                                                       **self.SweepsKwargs)
-
+            
             # Charact Events
             # If MainBoardv3 --> Connects the switch event
             if self.threadAcq.DaqInterface.DOSwitch:
@@ -132,12 +147,6 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.EventNextDigital = self.on_NextDigital
             self.threadCharact.EventCharactEnd = self.on_CharactEnd
             self.threadCharact.EventRefreshPlots = self.on_RefreshPlots
-
-            # Charact Signals
-            # self.threadCharact.NextBias.connect(self.on_NextBias)
-            # self.threadCharact.NextDigital.connect(self.on_NextDigital)
-            # self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            # self.threadCharact.RefreshPlots.connect(self.on_RefreshPlots)
 
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
@@ -159,7 +168,6 @@ class MainWindow(Qt.QWidget):
             self.CharPlot = Plotter(self.threadCharact.SaveDCAC.DevDCVals,
                                     DevACVals)
 
-            # self.threadCharact.start()
             self.threadAcq.start()
             self.CharPlot.start()
 
@@ -190,8 +198,6 @@ class MainWindow(Qt.QWidget):
 
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
                                     ACData)
-        # self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-        #                            self.threadAcq.aiDataAC.transpose())
 
         print('sample time', Ts, np.mean(self.Tss))
 
@@ -260,10 +266,9 @@ class MainWindow(Qt.QWidget):
             self.threadSave.terminate()
             self.threadSave = None
 
-        if self.threadPlotter is not None:
-            self.threadPlotter.terminate()
-            self.threadPlotter = None
-
+        if self.CharPlot:
+            self.CharPlot.terminate()
+            self.CharPlot = None
 
 def main():
     import argparse
