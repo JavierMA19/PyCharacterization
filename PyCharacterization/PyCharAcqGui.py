@@ -151,15 +151,15 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
-            # if self.threadAcq.DaqInterface.doColumns:
-            if len(self.DO) >= 1:
-                time.sleep(4)
-                if len(self.DO.shape) == 1:
-                    signal = self.DO
-                else:
-                    signal = self.DO[:, 0]
-                print('InitDigitalOutputs')
-                self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
+            if self.threadAcq.DaqInterface.doColumns:
+                if len(self.DO) >= 1:
+                    time.sleep(4)
+                    if len(self.DO.shape) == 1:
+                        signal = self.DO
+                    else:
+                        signal = self.DO[:, 0]
+                    print('InitDigitalOutputs')
+                    self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
 
             if self.AcEnable:
                 DevACVals = self.threadCharact.SaveDCAC.DevACVals
