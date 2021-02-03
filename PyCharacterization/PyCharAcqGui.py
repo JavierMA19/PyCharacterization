@@ -243,19 +243,15 @@ class MainWindow(Qt.QWidget):
 
     def on_CharactEnd(self):
         print('END Charact')
-        self.threadCharact.SaveDCAC.SaveDicts(self.threadCharact.SaveDCAC,
-                                              **self.DcSaveKwargs)
+
+        # self.threadCharact.NextVg.disconnect()
+        # self.threadCharact.NextVd.disconnect()
         # self.threadCharact.CharactEnd.disconnect()
         # CharactDCDict = self.threadCharact.DCDict
-        # CharactACDict = None
-        # if self.AcEnable:
-        #     CharactACDict = self.threadCharact.ACDict
-        # # TODO check this saving
-        # print(self.DcSaveKwargs)
-        # print(CharactDCDict)
-        # self.threadCharact.SaveDCAC.SaveDicts(CharactDCDict,
-        #                                       CharactACDict,
-        #                                       **self.DcSaveKwargs)
+        # CharactACDict = self.threadCharact.ACDict
+        # TODO check this saving
+        self.threadCharact.SaveDCAC.SaveDicts(**self.DcSaveKwargs)
+
         self.threadAcq.NewMuxData.disconnect()
 
         self.threadAcq.DaqInterface.Stop()
