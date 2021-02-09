@@ -241,8 +241,6 @@ class DataAcquisitionThread(Qt.QThread):
         self.DaqInterface.DataDoneNEvent = self.NewData
 
         self.SampKw = SampKw
-        print('SampKWKWKW')
-        print(SampKw)
 
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(**self.SampKw)
@@ -250,7 +248,6 @@ class DataAcquisitionThread(Qt.QThread):
         loop.exec_()
 
     def NewData(self, aiDataDC, aiDataAC):
-        print('NewData')
         self.aiDataDC = aiDataDC
         self.aiDataAC = aiDataAC
 

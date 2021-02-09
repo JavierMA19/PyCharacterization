@@ -153,12 +153,11 @@ class MainWindow(Qt.QWidget):
 
             if self.threadAcq.DaqInterface.doColumns:
                 if len(self.DO) >= 1:
-                    time.sleep(4)
+                    time.sleep(5)
                     if len(self.DO.shape) == 1:
                         signal = self.DO
                     else:
                         signal = self.DO[:, 0]
-                    print('InitDigitalOutputs')
                     self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=signal)
 
             if self.AcEnable:
@@ -202,7 +201,6 @@ class MainWindow(Qt.QWidget):
         print('sample time', Ts, np.mean(self.Tss))
 
     def on_NextBias(self):
-        print('NEXT SWEEP')
         if self.SamplingPar.Ao2:
             Ao2 = self.SamplingPar.Ao2.value()
             Ao3 = self.SamplingPar.Ao3.value()
@@ -216,7 +214,6 @@ class MainWindow(Qt.QWidget):
                                             ChAo3=Ao3)
 
     def on_NextDigital(self):
-        print('on_NextDigital')
         NewDigitalSignal = self.DO[:, self.threadCharact.DigIndex]
         self.threadAcq.DaqInterface.DigitalOutputs.SetDigitalSignal(Signal=NewDigitalSignal)
         self.on_NextBias()
@@ -227,16 +224,13 @@ class MainWindow(Qt.QWidget):
                                                      EverySamps=EverySamps)
 
     def on_RefreshPlots(self):
-        print('Refresh Plots')
         self.CharPlot.RefreshPlot(VgInd=self.threadCharact.VgIndex,
                                   VdInd=self.threadCharact.VdIndex)
 
     def SwitchSignal(self, Signal):
-        print('SWITCHDCDCDC')
         AC = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=np.uint8)
         DC = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0], dtype=np.uint8)
         if Signal == 'AC':
-            print('AC')
             self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=AC)
         if Signal == 'DC':
             self.threadAcq.DaqInterface.SwitchOut.SetDigitalSignal(Signal=DC)
@@ -257,6 +251,7 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.Stop()
         self.threadAcq.terminate()
         self.threadAcq = None
+        self.btnAcq.setText("Start Gen")
 
         if self.threadSave is not None:
             self.threadSave.terminate()

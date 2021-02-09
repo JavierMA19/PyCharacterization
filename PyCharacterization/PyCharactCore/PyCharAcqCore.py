@@ -243,7 +243,6 @@ class ChannelsConfig():
         return Dout, NewInd
 
     def GetDecoderSignal(self):
-        print('GETDECODERSIGNAL')
         Decoder = self.DecoderDigital(5)
         Dec = np.array(Decoder, dtype=np.uint8)
         DOut = np.array([])
@@ -298,7 +297,6 @@ class ChannelsConfig():
             _DataEveryNEvent(aiDataDC, aiDataAC, )
 
     def DoneEventCallBack(self, Data):
-        print('DoneEventCallback')
         _DataDoneNEvent = self.DataDoneNEvent
         aiDataDC = None
         aiDataAC = None
