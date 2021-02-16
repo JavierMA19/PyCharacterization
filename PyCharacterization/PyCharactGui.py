@@ -88,6 +88,8 @@ class MainWindow(Qt.QWidget):
         if self.threadAcq is None:
             self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
+            print('GenCHanskwargs------>')
+            print(GenChanKwargs)
 
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
