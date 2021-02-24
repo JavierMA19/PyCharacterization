@@ -110,12 +110,16 @@ class MainWindow(Qt.QWidget):
 
             DigColumns = self.threadAcq.DaqInterface.DigColumns
             MuxChannelsNames, ChannelsNames = self.SamplingPar.GetChannelsNames()
+            
+            print('Testtttt')
+            print(DigColumns)
+            print(self.SamplingPar.GetChannelsNames())
 
             # Determine what digital signal it has to be implemented
             # It can be for the decoder electronics, for the
             # multiplexing electronics or for normal electronics
 
-            if self.threadAcq.DaqInterface.doColumns:
+            if self.threadAcq.DaqInterface.doColumns and DigColumns:
                 print('----->>>', self.threadAcq.DaqInterface.doColumns)
                 ChNames = MuxChannelsNames
                 if self.threadAcq.DaqInterface.doColumns['Col01'] is None:
@@ -153,7 +157,7 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs['Vgs'] = self.threadCharact.NextVgs
             self.GenKwargs['Vds'] = self.threadCharact.NextVds
 
-            if self.threadAcq.DaqInterface.doColumns:
+            if self.threadAcq.DaqInterface.doColumns and DigColumns:
                 if len(self.DO) >= 1:
                     time.sleep(5)
                     if len(self.DO.shape) == 1:
