@@ -202,7 +202,7 @@ class MainWindow(Qt.QWidget):
             ACData = None
 
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-                                    ACData)
+                                   ACData)
 
         print('sample time', Ts, np.mean(self.Tss))
 

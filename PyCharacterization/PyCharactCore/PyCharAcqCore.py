@@ -26,8 +26,11 @@ class ChannelsConfig():
     DOSwitch = None
     DO = None
     IndexDigitalLines = None
+    Gate = None
+    GateChannelIndex = None
     # Events list
     DataEveryNEvent = None
+    GateDataEveryNEvent = None
     DataDoneEvent = None
 
     def _InitAnalogInputs(self):
@@ -57,8 +60,16 @@ class ChannelsConfig():
                     print(ch, ' AC -->', self.aiChannels[ch][1])
                     print('SortIndex ->', self.ACChannelIndex[ch])
             sortindex += 1
+
+        if self.Gate:
+            self.GateChannelIndex = {self.Gate[0]: (index, 0)}
+            InChans.append(self.aiChannels[self.Gate[0]][0])
+        else:
+            self.GateChannelIndex = None
+
         print('Input ai', InChans)
         print(self.DCChannelIndex)
+        print('Gate', self.GateChannelIndex)
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, Range=self.Range)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
@@ -91,16 +102,21 @@ class ChannelsConfig():
         if ChAo3:
             self.AO3Out = DaqInt.WriteAnalog((ChAo3,))
 
-    def __init__(self, Channels, DigColumns,
+    def __init__(self, Channels, DigColumns, Gate,
                  AcqDC=True, AcqAC=True,
                  ChVds='ao0', ChVs='ao1',
                  ACGain=1.1e5, DCGain=10e3, Board='MB41',
                  DynamicRange=None):
         print('InitChannels')
-        # self._InitAnalogOutputs(ChVds=ChVds, ChVs=ChVs)
+        print(Gate)
 
         self.ChNamesList = sorted(Channels)
-        # Fix AC and DC config as True
+        self.Gate = Gate
+        
+        # for chn in self.ChNamesList:
+        #     if Gate[0] == chn:
+        #         self.ChNamesList.remove(chn)
+        
         print(self.ChNamesList)
         self.AcqAC = AcqAC
         self.AcqDC = True
@@ -285,8 +301,10 @@ class ChannelsConfig():
 
     def EveryNEventCallBack(self, Data):
         _DataEveryNEvent = self.DataEveryNEvent
+
         aiDataDC = None
         aiDataAC = None
+        aiGateData = None
 
         if _DataEveryNEvent is not None:
             if self.AcqDC:
@@ -295,13 +313,17 @@ class ChannelsConfig():
             if self.AcqAC:
                 aiDataAC = self._SortChannels(Data, self.ACChannelIndex)
                 aiDataAC = aiDataAC / self.ACGain
+            if self.Gate:
+                aiGateData = self._SortChannels(Data, self.GateChannelIndex)
+                aiGateData = (aiGateData/2.2e6)
 
-            _DataEveryNEvent(aiDataDC, aiDataAC, )
+            _DataEveryNEvent(aiDataDC, aiDataAC, aiGateData)
 
     def DoneEventCallBack(self, Data):
         _DataDoneNEvent = self.DataDoneNEvent
         aiDataDC = None
         aiDataAC = None
+        aiGateData = None
 
         if _DataDoneNEvent is not None:
             if self.AcqDC:
@@ -311,7 +333,12 @@ class ChannelsConfig():
                 aiDataAC = self._SortChannels(Data, self.ACChannelIndex)
                 aiDataAC = aiDataAC / self.ACGain
 
-            _DataDoneNEvent(aiDataDC, aiDataAC, )
+            if self.Gate:
+                aiGateData = self._SortChannels(Data, self.GateChannelIndex)
+                aiGateData = (aiGateData/2.2e6)
+
+            _DataDoneNEvent(aiDataDC, aiDataAC, aiGateData)
+
 
     def Stop(self):
         print('Stopppp')

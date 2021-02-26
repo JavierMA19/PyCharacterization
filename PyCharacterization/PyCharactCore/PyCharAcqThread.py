@@ -55,7 +55,13 @@ SampSettingConf = ({'title': 'Channels Config',
                                  {'tittle': 'Columns Channels',
                                   'name': 'DigColumns',
                                   'type': 'group',
-                                  'children': (), }
+                                  'children': (), },
+
+                                 {'tittle': 'Gate Channel',
+                                  'name': 'Gate',
+                                  'type': 'group',
+                                  'children': (), },
+
 
                                  ), },
 
@@ -71,6 +77,11 @@ SampSettingConf = ({'title': 'Channels Config',
 ChannelParam = {'name': 'Chx',
                 'type': 'bool',
                 'value': True}
+
+GateParam = {'name': 'Chx',
+             'type': 'bool',
+             'value': False}
+
 
 AnalogOutParam = {'name': 'Aox',
                   'type': 'float',
@@ -98,10 +109,12 @@ class SampSetParam(pTypes.GroupParameter):
         self.Config = self.ChsConfig.param('Board')
         self.RowChannels = self.ChsConfig.param('Channels')
         self.ColChannels = self.ChsConfig.param('DigColumns')
+        self.GateChannel = self.ChsConfig.param('Gate')
 
         # Init Settings
         self.on_Row_Changed()
         self.on_Col_Changed()
+        self.on_Gate_Changed()
         self.on_Ao_Changed()
 
         print(self.children())
@@ -109,6 +122,7 @@ class SampSetParam(pTypes.GroupParameter):
         self.Config.sigTreeStateChanged.connect(self.Hardware_Selection)
         self.RowChannels.sigTreeStateChanged.connect(self.on_Row_Changed)
         self.ColChannels.sigTreeStateChanged.connect(self.on_Col_Changed)
+        self.GateChannel.sigTreeStateChanged.connect(self.on_Gate_Changed)
         self.AnalogOutputs.sigTreeStateChanged.connect(self.on_Ao_Changed)
 
     def Hardware_Selection(self):
@@ -118,6 +132,7 @@ class SampSetParam(pTypes.GroupParameter):
                 self.HwSettings = BoardConf.HwConfig[k]
         self.GetChannelsChildren()
         self.GetColsChildren()
+        self.GetGateChildren()
         self.GetAnalogOutputs()
 
     def GetChannelsChildren(self):
@@ -145,6 +160,16 @@ class SampSetParam(pTypes.GroupParameter):
                         cc['name'] = i
                         self.ColChannels.addChild(cc)
 
+    def GetGateChildren(self):
+        print('GetGateChildren')
+        if self.HwSettings:
+            self.GateChannel.clearChildren()
+            for i in sorted(self.HwSettings['aiChannels']):
+                cc = copy.deepcopy(GateParam)
+                cc['name'] = i
+                print(i)
+                self.GateChannel.addChild(cc)
+
     def GetAnalogOutputs(self):
         print('GetAnalogOutputs')
         if self.HwSettings:
@@ -169,6 +194,13 @@ class SampSetParam(pTypes.GroupParameter):
             if p.value() is True:
                 self.Columns.append(p.name())
         # self.on_Fs_Changed()
+        self.NewConf.emit()
+
+    def on_Gate_Changed(self):
+        self.Gate = []
+        for p in self.GateChannel.children():
+            if p.value() is True:
+                self.Gate.append(p.name())
         self.NewConf.emit()
 
     def on_Ao_Changed(self):
@@ -231,6 +263,8 @@ class SampSetParam(pTypes.GroupParameter):
                 ChanKwargs[p.name()] = self.Rows
             elif p.name() == 'DigColumns':
                 ChanKwargs[p.name()] = self.Columns
+            elif p.name() == 'Gate':
+                ChanKwargs[p.name()] = self.Gate
             else:
                 ChanKwargs[p.name()] = p.value()
 
@@ -257,10 +291,10 @@ class DataAcquisitionThread(Qt.QThread):
         loop = Qt.QEventLoop()
         loop.exec_()
 
-    def NewData(self, aiDataDC, aiDataAC):
+    def NewData(self, aiDataDC, aiDataAC, aiGateData):
         self.aiDataDC = aiDataDC
         self.aiDataAC = aiDataAC
-
+        self.aiGateData = aiGateData
         # if aiDataAC is not None:
         #     print('AC--DC')
         #     self.aiData = aiDataDC
