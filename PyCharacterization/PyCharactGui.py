@@ -90,7 +90,10 @@ class MainWindow(Qt.QWidget):
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             print('GenCHanskwargs------>')
             print(GenChanKwargs)
-
+            if GenChanKwargs['Gate']:
+                self.Gate = True
+            else: 
+                self.Gate = None
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
@@ -141,7 +144,8 @@ class MainWindow(Qt.QWidget):
                                                       DigColumns=DigColumns,
                                                       IndexDigitalLines=IndexDigitalLines,
                                                       PSDKwargs=PSDKwargs,
-                                                      **self.SweepsKwargs)
+                                                      **self.SweepsKwargs,
+                                                      Gate=self.Gate)
             
             # Charact Events
             # If MainBoardv3 --> Connects the switch event
@@ -201,8 +205,14 @@ class MainWindow(Qt.QWidget):
         else:
             ACData = None
 
+        if self.threadAcq.aiGateData is not None:
+            GateData = self.threadAcq.aiGateData.transpose()
+        else: 
+            GateData = None
+
         self.threadCharact.AddData(self.threadAcq.aiDataDC.transpose(),
-                                   ACData)
+                                   ACData,
+                                   GateData)
 
         print('sample time', Ts, np.mean(self.Tss))
 
