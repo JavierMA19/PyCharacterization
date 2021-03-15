@@ -88,15 +88,27 @@ class MainWindow(Qt.QWidget):
         if self.threadAcq is None:
             self.GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
+
             print('GenCHanskwargs------>')
             print(GenChanKwargs)
             if GenChanKwargs['Gate']:
                 self.Gate = True
             else: 
                 self.Gate = None
+
             # Characterization part
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+            print(self.DcSaveKwargs)
+            
+            # Cycles
+            # self.Cycles = self.SamplingPar.GetCycles()
+            self.initCy = self.DcSaveKwargs['InitCycle']
+            self.finalCy = self.DcSaveKwargs['FinalCycle']
+            if self.initCy > self.finalCy:
+                print('Set correct Cycles')
+                self.finalCy = self.initCy + 1
+
             self.DevCond = self.SweepsKwargs['MaxSlope']
 
             # PSD Parameters
@@ -137,6 +149,7 @@ class MainWindow(Qt.QWidget):
             else:
                 IndexDigitalLines = None
                 ChNames = ChannelsNames
+
             # Characterization Part
             self.threadCharact = Charact.StbDetThread(
                                                       nChannels=len(ChannelsNames),
@@ -145,7 +158,7 @@ class MainWindow(Qt.QWidget):
                                                       IndexDigitalLines=IndexDigitalLines,
                                                       PSDKwargs=PSDKwargs,
                                                       **self.SweepsKwargs,
-                                                      Gate=self.Gate)
+                                                      Gate=self.Gate, )
             
             # Charact Events
             # If MainBoardv3 --> Connects the switch event
@@ -194,7 +207,6 @@ class MainWindow(Qt.QWidget):
             self.btnAcq.setText("Start Gen")
 
     def on_NewSample(self):
-        print('on_newSample')
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
         self.Tss.append(Ts)
@@ -260,22 +272,31 @@ class MainWindow(Qt.QWidget):
         # CharactDCDict = self.threadCharact.DCDict
         # CharactACDict = self.threadCharact.ACDict
         # TODO check this saving
-        self.threadCharact.SaveDCAC.SaveDicts(**self.DcSaveKwargs)
+        self.threadCharact.SaveDCAC.SaveDicts(CurrentCy=self.initCy, **self.DcSaveKwargs)
+        if self.initCy < self.finalCy-1:
+            self.initCy += 1
+            self.threadCharact.State='WaitStab'
+        else:
+            self.initCy = 0
+        ###
+        # Si hay ciclos, vuelvo a hacer initsweep
+        # si no, entonces finalizo la adquisicion
+        ###
 
-        self.threadAcq.NewMuxData.disconnect()
-
-        self.threadAcq.DaqInterface.Stop()
-        self.threadAcq.terminate()
-        self.threadAcq = None
-        self.btnAcq.setText("Start Gen")
-
-        if self.threadSave is not None:
-            self.threadSave.terminate()
-            self.threadSave = None
-
-        if self.CharPlot:
-            self.CharPlot.terminate()
-            self.CharPlot = None
+            self.threadAcq.NewMuxData.disconnect()
+    
+            self.threadAcq.DaqInterface.Stop()
+            self.threadAcq.terminate()
+            self.threadAcq = None
+            self.btnAcq.setText("Start Gen")
+    
+            if self.threadSave is not None:
+                self.threadSave.terminate()
+                self.threadSave = None
+    
+            if self.CharPlot:
+                self.CharPlot.terminate()
+                self.CharPlot = None
 
 def main():
     import argparse
