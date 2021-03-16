@@ -275,6 +275,7 @@ class MainWindow(Qt.QWidget):
         self.threadCharact.SaveDCAC.SaveDicts(CurrentCy=self.initCy, **self.DcSaveKwargs)
         if self.initCy < self.finalCy-1:
             self.initCy += 1
+            self.threadCharact.InitDictionaries()
             self.threadCharact.State='WaitStab'
         else:
             self.initCy = 0
